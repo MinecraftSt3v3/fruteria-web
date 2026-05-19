@@ -1,5 +1,8 @@
 from pathlib import Path
 import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-fruteria-eli-secret-key-change-in-production'
@@ -87,8 +90,9 @@ LOGIN_URL = '/accounts/login/'
 LOGIN_REDIRECT_URL = '/'
 LOGOUT_REDIRECT_URL = '/'
 
-STRIPE_PUBLIC_KEY = ''
-STRIPE_SECRET_KEY = ''
+
+STRIPE_PUBLIC_KEY = os.getenv('STRIPE_PUBLIC_KEY')
+STRIPE_SECRET_KEY = os.getenv('STRIPE_SECRET_KEY')
 
 SESSION_SAVE_EVERY_REQUEST = True
 SESSION_COOKIE_AGE = 86400 * 30  # 30 days

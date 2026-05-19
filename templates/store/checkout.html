@@ -1,0 +1,145 @@
+{% extends 'base.html' %}
+{% block title %}{% if lang == 'en' %}Checkout{% else %}Pago{% endif %} — Frutería Elí{% endblock %}
+
+{% block content %}
+<div class="page-container" style="max-width:1000px;">
+  <h1 class="page-header">💳 {% if lang == 'en' %}Checkout{% else %}Finalizar Pedido{% endif %}</h1>
+
+  <div class="checkout-grid">
+    <!-- LEFT: Notes -->
+    <div>
+      <div class="checkout-card">
+        <h3>📝 {% if lang == 'en' %}Order Notes{% else %}Notas del Pedido{% endif %}</h3>
+        <p style="font-size:0.9rem;color:#666;margin-bottom:1rem;">
+          {% if lang == 'en' %}Any special instructions? Preferred pickup time?{% else %}¿Instrucciones especiales? ¿Hora de recolección preferida?{% endif %}
+        </p>
+        <textarea class="notes-field" id="order-notes" rows="4"
+          placeholder="{% if lang == 'en' %}E.g. Please pick the ripest mangos 🥭{% else %}Ej. Por favor escoge los mangos más maduros 🥭{% endif %}"></textarea>
+      </div>
+
+      <div class="checkout-card" style="margin-top:1.5rem;">
+        <h3>🏪 {% if lang == 'en' %}Pickup Information{% else %}Información de Recogida{% endif %}</h3>
+        <div style="display:flex;align-items:flex-start;gap:1rem;margin-top:0.5rem;">
+          <span style="font-size:2rem;">📍</span>
+          <div>
+            <strong>Frutería Elí</strong><br>
+            <span style="color:#666;font-size:0.9rem;">Primo Tapia, Baja California, México</span><br>
+            <span style="color:var(--verde);font-size:0.9rem;font-weight:700;">{% if lang == 'en' %}Mon – Sat: 7am – 7pm{% else %}Lun – Sáb: 7am – 7pm{% endif %}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT: Summary + Payment -->
+    <div>
+      <div class="checkout-card">
+        <h3>🧾 {% if lang == 'en' %}Order Summary{% else %}Resumen del Pedido{% endif %}</h3>
+
+        {% for item in cart.items.all %}
+        <div class="order-summary-item">
+          <span>{% if lang == 'en' %}{{ item.product.name_en }}{% else %}{{ item.product.name_es }}{% endif %} × {{ item.quantity }} {{ item.product.unit }}</span>
+          <strong>${{ item.get_subtotal }}</strong>
+        </div>
+        {% endfor %}
+
+        <div class="order-total-line">
+          <span>{% if lang == 'en' %}Total{% else %}Total{% endif %}</span>
+          <span>${{ cart.get_total }} MXN</span>
+        </div>
+      </div>
+
+      <!-- Stripe Payment Card -->
+      <div class="checkout-card" style="margin-top:1.5rem;">
+        <div class="mp-banner">
+          <strong>💳 Pagar con tarjeta (Stripe)</strong>
+          <span>{% if lang == 'en' %}Secure card payment{% else %}Pago con tarjeta seguro{% endif %}</span>
+        </div>
+
+        <div id="stripe-card-container" style="margin-top:1rem;">
+          <div id="card-element" style="padding:12px;border:1px solid #e6e6e6;border-radius:6px;"></div>
+          <div id="card-errors" role="alert" style="color: red;margin-top:0.5rem;"></div>
+          <button id="stripe-pay-button" type="button" class="btn-primary" style="width:100%;justify-content:center;font-size:1.1rem;padding:1rem;margin-top:0.75rem;">
+            {% if lang == 'en' %}Pay with Card — ${{ cart.get_total }} MXN{% else %}Pagar con tarjeta — ${{ cart.get_total }} MXN{% endif %}
+          </button>
+        </div>
+      </div>
+
+
+        <!-- Fallback / Demo button -->
+        <form method="post" action="{% url 'place_order' %}" id="order-form">
+          {% csrf_token %}
+          <input type="hidden" name="notes" id="notes-hidden">
+          <input type="hidden" name="payment_id" id="payment-id-hidden" value="">
+        </form>
+
+        <p style="font-size:0.78rem;color:#999;text-align:center;margin-top:0.75rem;">
+          {% if lang == 'en' %}🔒 Your payment is processed securely by MercadoPago{% else %}🔒 Tu pago es procesado de forma segura por MercadoPago{% endif %}
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- Stripe.js -->
+<script src="https://js.stripe.com/v3/"></script>
+
+<script>
+function submitOrder(e) {
+  document.getElementById('notes-hidden').value = document.getElementById('order-notes').value;
+}
+
+// Stripe Elements: create PaymentIntent on server and confirm card payment
+try {
+  const stripe = Stripe('{{ stripe_public_key }}');
+  const elements = stripe.elements();
+  const card = elements.create('card', { hidePostalCode: true });
+  card.mount('#card-element');
+
+  card.on('change', function(event) {
+    const displayError = document.getElementById('card-errors');
+    displayError.textContent = event.error ? event.error.message : '';
+  });
+
+  document.getElementById('stripe-pay-button').addEventListener('click', async function() {
+    // ensure notes are captured
+    document.getElementById('notes-hidden').value = document.getElementById('order-notes').value;
+
+    // create PaymentIntent on the backend
+    const resp = await fetch("{% url 'create_payment_intent' %}", {
+      method: 'POST',
+      headers: {
+        'X-CSRFToken': '{{ csrf_token }}',
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({}) // extend if you need to send metadata
+    });
+
+    const data = await resp.json();
+    if (data.error) {
+      document.getElementById('card-errors').textContent = data.error;
+      return;
+    }
+
+    const clientSecret = data.client_secret;
+    const result = await stripe.confirmCardPayment(clientSecret, {
+      payment_method: { card: card }
+    });
+
+    if (result.error) {
+      document.getElementById('card-errors').textContent = result.error.message || 'Payment failed';
+    } else if (result.paymentIntent && result.paymentIntent.status === 'succeeded') {
+      // set payment id and submit order form
+      document.getElementById('payment-id-hidden').value = result.paymentIntent.id;
+      document.getElementById('order-form').submit();
+    } else {
+      document.getElementById('card-errors').textContent = 'Payment not completed';
+    }
+  });
+} catch (e) {
+  console.log('Stripe not configured or error initializing:', e);
+}
+</script>
+
+{% endblock %}

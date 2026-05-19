@@ -1,0 +1,75 @@
+{% extends 'base.html' %}
+{% block title %}{% if lang == 'en' %}Shop{% else %}Tienda{% endif %} — Frutería Elí{% endblock %}
+
+{% block content %}
+<div style="background:linear-gradient(135deg,var(--verde),#1a4a35);color:white;padding:2.5rem 2rem;text-align:center;">
+  <h1 style="font-family:'Fraunces',serif;font-size:2.5rem;font-weight:900;color:var(--amarillo);">
+    {% if lang == 'en' %}🛒 Our <span style="font-style:italic;color:white;">Products</span>{% else %}🛒 Nuestros <span style="font-style:italic;color:white;">Productos</span>{% endif %}
+  </h1>
+  <p style="opacity:0.85;margin-top:0.5rem;">{% if lang == 'en' %}Fresh picked, every single day{% else %}Recogido fresco, cada día{% endif %}</p>
+</div>
+
+<section class="products-section">
+  <!-- Category Filter -->
+  {% if categories %}
+  <div class="category-bar">
+    <a href="{% url 'shop' %}" class="cat-pill {% if not active_cat %}active{% endif %}">
+      {% if lang == 'en' %}All{% else %}Todo{% endif %}
+    </a>
+    {% for cat in categories %}
+      <a href="{% url 'shop' %}?category={{ cat.slug }}" class="cat-pill {% if active_cat == cat %}active{% endif %}">
+        {% if lang == 'en' %}{{ cat.name_en }}{% else %}{{ cat.name_es }}{% endif %}
+      </a>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <div class="products-grid">
+    {% for product in products %}
+    <div class="product-card">
+      {% if product.is_special %}
+        <div class="special-ribbon">{% if lang == 'en' %}Special{% else %}Oferta{% endif %}</div>
+      {% endif %}
+
+      {% if product.image %}
+        <img src="{{ product.image.url }}" alt="{{ product.name_es }}" class="product-img">
+      {% else %}
+        <div class="product-img-placeholder">
+          {% if 'mango' in product.name_es|lower %}🥭{% elif 'piña' in product.name_es|lower %}🍍{% elif 'fresa' in product.name_es|lower %}🍓{% elif 'manzana' in product.name_es|lower %}🍎{% elif 'jitomate' in product.name_es|lower or 'tomate' in product.name_es|lower %}🍅{% elif 'naranja' in product.name_es|lower %}🍊{% elif 'limón' in product.name_es|lower or 'limon' in product.name_es|lower %}🍋{% elif 'sandía' in product.name_es|lower or 'sandia' in product.name_es|lower %}🍉{% elif 'uva' in product.name_es|lower %}🍇{% elif 'aguacate' in product.name_es|lower %}🥑{% elif 'chile' in product.name_es|lower %}🌶️{% elif 'elote' in product.name_es|lower %}🌽{% elif 'plátano' in product.name_es|lower or 'platano' in product.name_es|lower %}🍌{% elif 'pepino' in product.name_es|lower %}🥒{% elif 'zanahoria' in product.name_es|lower %}🥕{% else %}🌿{% endif %}
+        </div>
+      {% endif %}
+
+      <div class="product-body">
+        <div class="product-category">{{ product.category.name_es|default:"🌱" }}</div>
+        <div class="product-name">{% if lang == 'en' %}{{ product.name_en }}{% else %}{{ product.name_es }}{% endif %}</div>
+        {% if product.description_es %}
+          <p style="font-size:0.82rem;color:#777;margin:0.3rem 0 0.5rem;">
+            {% if lang == 'en' %}{{ product.description_en|truncatechars:60 }}{% else %}{{ product.description_es|truncatechars:60 }}{% endif %}
+          </p>
+        {% endif %}
+        <div>
+          <span class="product-price">${{ product.price }}</span>
+          <span class="product-unit"> / {{ product.unit }}</span>
+        </div>
+      </div>
+      <div class="product-actions">
+        {% if user.is_authenticated %}
+          <a href="{% url 'add_to_cart' product.id %}" class="btn-add">
+            {% if lang == 'en' %}+ Add to Cart{% else %}+ Agregar al Carrito{% endif %}
+          </a>
+        {% else %}
+          <a href="{% url 'login' %}" class="btn-add needs-login">
+            {% if lang == 'en' %}🔑 Login to Order{% else %}🔑 Inicia Sesión{% endif %}
+          </a>
+        {% endif %}
+      </div>
+    </div>
+    {% empty %}
+    <div class="empty-state" style="grid-column:1/-1;">
+      <div class="empty-emoji">🌱</div>
+      <h3>{% if lang == 'en' %}No products found{% else %}No se encontraron productos{% endif %}</h3>
+    </div>
+    {% endfor %}
+  </div>
+</section>
+{% endblock %}

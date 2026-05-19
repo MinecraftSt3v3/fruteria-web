@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+{% block title %}{% if lang == 'en' %}My Cart{% else %}Mi Carrito{% endif %} — Frutería Elí{% endblock %}
+
+{% block content %}
+<div class="page-container">
+  <h1 class="page-header">🛍️ {% if lang == 'en' %}My Cart{% else %}Mi Carrito{% endif %}</h1>
+
+  {% if cart.items.all %}
+  <table class="cart-table">
+    <thead>
+      <tr>
+        <th>{% if lang == 'en' %}Product{% else %}Producto{% endif %}</th>
+        <th>{% if lang == 'en' %}Price{% else %}Precio{% endif %}</th>
+        <th>{% if lang == 'en' %}Quantity{% else %}Cantidad{% endif %}</th>
+        <th>{% if lang == 'en' %}Subtotal{% else %}Subtotal{% endif %}</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for item in cart.items.all %}
+      <tr>
+        <td>
+          <strong>{% if lang == 'en' %}{{ item.product.name_en }}{% else %}{{ item.product.name_es }}{% endif %}</strong>
+          <br><small style="color:#999;">{{ item.product.unit }}</small>
+        </td>
+        <td>${{ item.product.price }}</td>
+        <td>
+          <form method="post" action="{% url 'update_cart' item.id %}" style="display:inline;">
+            {% csrf_token %}
+            <input type="number" name="quantity" value="{{ item.quantity }}" min="0.1" step="0.1" class="qty-input">
+            <button type="submit" style="background:var(--verde-claro);color:white;border:none;padding:0.4rem 0.7rem;border-radius:8px;cursor:pointer;font-weight:700;margin-left:4px;">✓</button>
+          </form>
+        </td>
+        <td><strong>${{ item.get_subtotal }}</strong></td>
+        <td>
+          <a href="{% url 'remove_from_cart' item.id %}" class="btn-danger" onclick="return confirm('{% if lang == "en" %}Remove this item?{% else %}¿Quitar este producto?{% endif %}')">✕</a>
+        </td>
+      </tr>
+      {% endfor %}
+      <tr class="cart-total-row">
+        <td colspan="3" style="text-align:right;padding-right:1.5rem;">
+          {% if lang == 'en' %}Total:{% else %}Total:{% endif %}
+        </td>
+        <td colspan="2" style="color:var(--rojo);">${{ cart.get_total }}</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="cart-actions">
+    <a href="{% url 'shop' %}" class="btn-secondary">{% if lang == 'en' %}← Continue Shopping{% else %}← Seguir Comprando{% endif %}</a>
+    <a href="{% url 'checkout' %}" class="btn-primary">{% if lang == 'en' %}💳 Proceed to Checkout{% else %}💳 Ir al Pago{% endif %}</a>
+  </div>
+
+  {% else %}
+  <div class="empty-state">
+    <div class="empty-emoji">🛒</div>
+    <h3>{% if lang == 'en' %}Your cart is empty{% else %}Tu carrito está vacío{% endif %}</h3>
+    <p style="margin:1rem 0;">{% if lang == 'en' %}Add some fresh products!{% else %}¡Agrega productos frescos!{% endif %}</p>
+    <a href="{% url 'shop' %}" class="btn-primary">{% if lang == 'en' %}🌿 Go Shopping{% else %}🌿 Ir a Comprar{% endif %}</a>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

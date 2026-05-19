@@ -1,0 +1,202 @@
+{% extends 'base.html' %}
+{% block title %}Frutería Elí — {% if lang == 'en' %}Fresh Market{% else %}Mercado Fresco{% endif %}{% endblock %}
+
+{% block content %}
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-content">
+    <span class="hero-emoji">🌽</span>
+    {% if lang == 'en' %}
+      <h1>Fresh from the <span>Field</span></h1>
+      <p>The best fruits and vegetables, direct from local farms — every day fresh at Frutería Elí!</p>
+      <a href="{% url 'shop' %}" class="btn-primary">🛒 Shop Now</a>
+    {% else %}
+      <h1>Lo mejor del <span>Campo</span></h1>
+      <p>Las mejores frutas y verduras, directo de los productores locales — ¡frescos cada día en Frutería Elí!</p>
+      <a href="{% url 'shop' %}" class="btn-primary">🛒 Ver Productos</a>
+    {% endif %}
+  </div>
+</section>
+
+<!-- SPECIALS CAROUSEL -->
+{% if featured %}
+<section class="carousel-section">
+  <h2 class="section-title">{% if lang == 'en' %}🔥 Today's <span>Specials</span>{% else %}🔥 <span>Ofertas</span> del Día{% endif %}</h2>
+  <p class="section-sub">{% if lang == 'en' %}Limited time deals — grab them while they last!{% else %}¡Precios especiales por tiempo limitado!{% endif %}</p>
+
+  <div class="carousel-wrapper" id="carousel">
+    <div class="carousel-track" id="track">
+      {% for product in featured %}
+      <div class="carousel-slide">
+        <div class="carousel-info">
+          <span class="special-tag">{% if lang == 'en' %}✨ Special Offer{% else %}✨ Oferta Especial{% endif %}</span>
+          <h2>{% if lang == 'en' %}{{ product.name_en }}{% else %}{{ product.name_es }}{% endif %}</h2>
+          <p style="opacity:0.85;margin:0.5rem 0;">
+            {% if lang == 'en' %}{{ product.description_en }}{% else %}{{ product.description_es }}{% endif %}
+          </p>
+          <div class="price">${{ product.price }} / {{ product.unit }}</div>
+          {% if user.is_authenticated %}
+            <a href="{% url 'add_to_cart' product.id %}" class="btn-primary" style="margin-top:1rem;">
+              {% if lang == 'en' %}🛒 Add to Cart{% else %}🛒 Agregar{% endif %}
+            </a>
+          {% else %}
+            <a href="{% url 'login' %}" class="btn-primary" style="margin-top:1rem;">
+              {% if lang == 'en' %}🔑 Login to Order{% else %}🔑 Inicia Sesión{% endif %}
+            </a>
+          {% endif %}
+        </div>
+        <div class="carousel-emoji">
+          {% if 'mango' in product.name_es|lower %}🥭
+          {% elif 'piña' in product.name_es|lower or 'pina' in product.name_es|lower %}🍍
+          {% elif 'fresa' in product.name_es|lower %}🍓
+          {% elif 'manzana' in product.name_es|lower %}🍎
+          {% elif 'tomate' in product.name_es|lower or 'jitomate' in product.name_es|lower %}🍅
+          {% elif 'naranja' in product.name_es|lower %}🍊
+          {% elif 'limón' in product.name_es|lower or 'limon' in product.name_es|lower %}🍋
+          {% elif 'sandía' in product.name_es|lower or 'sandia' in product.name_es|lower %}🍉
+          {% elif 'uva' in product.name_es|lower %}🍇
+          {% elif 'aguacate' in product.name_es|lower %}🥑
+          {% elif 'chile' in product.name_es|lower %}🌶️
+          {% elif 'maíz' in product.name_es|lower or 'elote' in product.name_es|lower %}🌽
+          {% elif 'plátano' in product.name_es|lower or 'platano' in product.name_es|lower %}🍌
+          {% else %}🌿{% endif %}
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    <button class="carousel-btn carousel-prev" onclick="moveCarousel(-1)">‹</button>
+    <button class="carousel-btn carousel-next" onclick="moveCarousel(1)">›</button>
+  </div>
+  <div class="carousel-dots" id="dots">
+    {% for product in featured %}
+      <button class="dot {% if forloop.first %}active{% endif %}" onclick="goToSlide({{ forloop.counter0 }})"></button>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+
+<!-- FEATURED PRODUCTS -->
+<section class="products-section">
+  <h2 class="section-title">{% if lang == 'en' %}🌿 Fresh <span>Produce</span>{% else %}🌿 Productos <span>Frescos</span>{% endif %}</h2>
+  <p class="section-sub">{% if lang == 'en' %}Harvested fresh, delivered with love{% else %}Cosechado fresco, entregado con amor{% endif %}</p>
+
+  <div class="products-grid">
+    {% for product in products %}
+    <div class="product-card">
+      {% if product.is_special %}
+        <div class="special-ribbon">{% if lang == 'en' %}Special{% else %}Oferta{% endif %}</div>
+      {% endif %}
+
+      {% if product.image %}
+        <img src="{{ product.image.url }}" alt="{{ product.name_es }}" class="product-img">
+      {% else %}
+        <div class="product-img-placeholder">
+          {% if 'mango' in product.name_es|lower %}🥭
+          {% elif 'piña' in product.name_es|lower %}🍍
+          {% elif 'fresa' in product.name_es|lower %}🍓
+          {% elif 'manzana' in product.name_es|lower %}🍎
+          {% elif 'tomate' in product.name_es|lower or 'jitomate' in product.name_es|lower %}🍅
+          {% elif 'naranja' in product.name_es|lower %}🍊
+          {% elif 'limón' in product.name_es|lower or 'limon' in product.name_es|lower %}🍋
+          {% elif 'sandía' in product.name_es|lower or 'sandia' in product.name_es|lower %}🍉
+          {% elif 'uva' in product.name_es|lower %}🍇
+          {% elif 'aguacate' in product.name_es|lower %}🥑
+          {% elif 'chile' in product.name_es|lower %}🌶️
+          {% elif 'elote' in product.name_es|lower %}🌽
+          {% elif 'plátano' in product.name_es|lower or 'platano' in product.name_es|lower %}🍌
+          {% elif 'pepino' in product.name_es|lower %}🥒
+          {% elif 'zanahoria' in product.name_es|lower %}🥕
+          {% else %}🌿{% endif %}
+        </div>
+      {% endif %}
+
+      <div class="product-body">
+        <div class="product-category">{{ product.category.name_es|default:"🌱" }}</div>
+        <div class="product-name">{% if lang == 'en' %}{{ product.name_en }}{% else %}{{ product.name_es }}{% endif %}</div>
+        <div>
+          <span class="product-price">${{ product.price }}</span>
+          <span class="product-unit"> / {{ product.unit }}</span>
+        </div>
+      </div>
+      <div class="product-actions">
+        {% if user.is_authenticated %}
+          <a href="{% url 'add_to_cart' product.id %}" class="btn-add">
+            {% if lang == 'en' %}+ Add to Cart{% else %}+ Agregar al Carrito{% endif %}
+          </a>
+        {% else %}
+          <a href="{% url 'login' %}" class="btn-add needs-login">
+            {% if lang == 'en' %}🔑 Login to Order{% else %}🔑 Inicia Sesión para Pedir{% endif %}
+          </a>
+        {% endif %}
+      </div>
+    </div>
+    {% empty %}
+    <div class="empty-state" style="grid-column:1/-1;">
+      <div class="empty-emoji">🌱</div>
+      <h3>{% if lang == 'en' %}Products coming soon!{% else %}¡Productos próximamente!{% endif %}</h3>
+      <p>{% if lang == 'en' %}The admin is loading the catalog.{% else %}El administrador está cargando el catálogo.{% endif %}</p>
+    </div>
+    {% endfor %}
+  </div>
+
+  {% if products %}
+  <div style="text-align:center;margin-top:2rem;">
+    <a href="{% url 'shop' %}" class="btn-primary">
+      {% if lang == 'en' %}🌿 View All Products{% else %}🌿 Ver Todos los Productos{% endif %}
+    </a>
+  </div>
+  {% endif %}
+</section>
+
+<!-- WHY US -->
+<section style="background:var(--verde);padding:3rem 2rem;margin:2rem 0;">
+  <h2 class="section-title" style="color:var(--amarillo);">{% if lang == 'en' %}Why <span style="color:white;">Frutería Elí</span>?{% else %}¿Por qué <span style="color:white;">Frutería Elí</span>?{% endif %}</h2>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1.5rem;max-width:900px;margin:2rem auto 0;">
+    {% for item in "1234"|make_list %}
+    <div style="background:rgba(255,255,255,0.1);border-radius:16px;padding:1.5rem;text-align:center;color:white;">
+      {% if forloop.counter == 1 %}
+        <div style="font-size:2.5rem;margin-bottom:0.75rem;">🌱</div>
+        <strong style="font-size:1rem;">{% if lang == 'en' %}100% Fresh{% else %}100% Fresco{% endif %}</strong>
+        <p style="font-size:0.85rem;opacity:0.85;margin-top:0.5rem;">{% if lang == 'en' %}Directly from local farms{% else %}Directo de los productores locales{% endif %}</p>
+      {% elif forloop.counter == 2 %}
+        <div style="font-size:2.5rem;margin-bottom:0.75rem;">💰</div>
+        <strong style="font-size:1rem;">{% if lang == 'en' %}Best Prices{% else %}Mejores Precios{% endif %}</strong>
+        <p style="font-size:0.85rem;opacity:0.85;margin-top:0.5rem;">{% if lang == 'en' %}Fair prices every day{% else %}Precios justos todos los días{% endif %}</p>
+      {% elif forloop.counter == 3 %}
+        <div style="font-size:2.5rem;margin-bottom:0.75rem;">❤️</div>
+        <strong style="font-size:1rem;">{% if lang == 'en' %}Family Business{% else %}Negocio Familiar{% endif %}</strong>
+        <p style="font-size:0.85rem;opacity:0.85;margin-top:0.5rem;">{% if lang == 'en' %}Since the 1990s, serving with love{% else %}Desde los 90s, sirviendo con amor{% endif %}</p>
+      {% else %}
+        <div style="font-size:2.5rem;margin-bottom:0.75rem;">🚀</div>
+        <strong style="font-size:1rem;">{% if lang == 'en' %}Easy Ordering{% else %}Pedidos Fáciles{% endif %}</strong>
+        <p style="font-size:0.85rem;opacity:0.85;margin-top:0.5rem;">{% if lang == 'en' %}Order online, pick up fresh{% else %}Pide en línea, recoge fresco{% endif %}</p>
+      {% endif %}
+    </div>
+    {% endfor %}
+  </div>
+</section>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let current = 0;
+const slides = document.querySelectorAll('.carousel-slide');
+const dots = document.querySelectorAll('.dot');
+
+function goToSlide(n) {
+  current = n;
+  document.getElementById('track').style.transform = `translateX(-${current * 100}%)`;
+  dots.forEach((d, i) => d.classList.toggle('active', i === current));
+}
+
+function moveCarousel(dir) {
+  current = (current + dir + slides.length) % slides.length;
+  goToSlide(current);
+}
+
+// Auto-advance
+setInterval(() => moveCarousel(1), 4000);
+</script>
+{% endblock %}

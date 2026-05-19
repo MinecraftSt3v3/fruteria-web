@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+{% block title %}{% if lang == 'en' %}My Orders{% else %}Mis Pedidos{% endif %} — Frutería Elí{% endblock %}
+
+{% block content %}
+<div class="page-container">
+  <h1 class="page-header">📋 {% if lang == 'en' %}My Orders{% else %}Mis Pedidos{% endif %}</h1>
+
+  {% if orders %}
+  <div class="orders-list">
+    {% for order in orders %}
+    <a href="{% url 'order_receipt' order.id %}" class="order-card">
+      <div>
+        <strong style="font-family:'Fraunces',serif;font-size:1.1rem;color:var(--cafe);">#{{ order.order_number }}</strong>
+        <div style="font-size:0.85rem;color:#888;margin-top:0.25rem;">{{ order.created_at|date:"d/m/Y H:i" }}</div>
+      </div>
+      <div>
+        <span class="status-badge status-{{ order.status }}">{{ order.get_status_display }}</span>
+      </div>
+      <div style="text-align:right;">
+        <strong style="color:var(--rojo);font-size:1.1rem;">${{ order.total_amount }}</strong>
+        <div style="font-size:0.8rem;color:#999;">{{ order.items.count }} {% if lang == 'en' %}item(s){% else %}producto(s){% endif %}</div>
+      </div>
+      <div style="color:var(--verde-claro);">→</div>
+    </a>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="empty-state">
+    <div class="empty-emoji">📋</div>
+    <h3>{% if lang == 'en' %}No orders yet{% else %}Aún no tienes pedidos{% endif %}</h3>
+    <p style="margin:1rem 0;">{% if lang == 'en' %}Start shopping to place your first order!{% else %}¡Empieza a comprar para hacer tu primer pedido!{% endif %}</p>
+    <a href="{% url 'shop' %}" class="btn-primary">🛒 {% if lang == 'en' %}Shop Now{% else %}Ir a Comprar{% endif %}</a>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

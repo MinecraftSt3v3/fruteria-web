@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+{% block title %}{% if lang == 'en' %}About Us{% else %}Nosotros{% endif %} — Frutería Elí{% endblock %}
+
+{% block content %}
+<div class="about-hero">
+  <div style="font-size:4rem;margin-bottom:1rem;">🍊</div>
+  <h1 style="font-family:'Fraunces',serif;font-size:3rem;font-weight:900;margin-bottom:0.5rem;">
+    {% if lang == 'en' %}About <span style="font-style:italic;">Us</span>{% else %}Sobre <span style="font-style:italic;">Nosotros</span>{% endif %}
+  </h1>
+  <p style="font-size:1.1rem;opacity:0.9;">{% if lang == 'en' %}A family story rooted in the land{% else %}Una historia familiar arraigada en la tierra{% endif %}</p>
+</div>
+
+<div class="about-content">
+  <div class="about-card">
+    <h2 style="font-family:'Fraunces',serif;color:var(--cafe);font-size:1.6rem;margin-bottom:1rem;">
+      {% if lang == 'en' %}🌿 Our Story{% else %}🌿 Nuestra Historia{% endif %}
+    </h2>
+    {% if lang == 'en' %}
+      <p>Frutería Elí was born from a passion for fresh, quality produce. Founded by Elí and family, we have spent decades sourcing the finest fruits and vegetables directly from local farms and regional producers.</p>
+      <p style="margin-top:1rem;">What started as a small market stall has grown into a beloved neighborhood institution — a place where customers are treated like family and every piece of produce is hand-selected for quality.</p>
+    {% else %}
+      <p>Frutería Elí nació de una pasión por los productos frescos y de calidad. Fundada por Elí y su familia, llevamos décadas seleccionando las mejores frutas y verduras directamente de productores locales y regionales.</p>
+      <p style="margin-top:1rem;">Lo que comenzó como un pequeño puesto de mercado se ha convertido en una querida institución del barrio — un lugar donde los clientes son tratados como familia y cada producto es seleccionado a mano por su calidad.</p>
+    {% endif %}
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;margin-bottom:2rem;">
+    <div class="about-card" style="border-left-color:var(--rojo);">
+      <div style="font-size:2.5rem;margin-bottom:0.75rem;">📍</div>
+      <h3 style="font-family:'Fraunces',serif;color:var(--cafe);">{% if lang == 'en' %}Location{% else %}Ubicación{% endif %}</h3>
+      <p style="margin-top:0.5rem;color:#555;">Primo Tapia, Baja California, México</p>
+    </div>
+    <div class="about-card" style="border-left-color:var(--naranja);">
+      <div style="font-size:2.5rem;margin-bottom:0.75rem;">🕐</div>
+      <h3 style="font-family:'Fraunces',serif;color:var(--cafe);">{% if lang == 'en' %}Hours{% else %}Horario{% endif %}</h3>
+      <p style="margin-top:0.5rem;color:#555;">{% if lang == 'en' %}Mon – Sat: 7:00 AM – 7:00 PM{% else %}Lun – Sáb: 7:00 AM – 7:00 PM{% endif %}</p>
+    </div>
+    <div class="about-card" style="border-left-color:var(--morado);">
+      <div style="font-size:2.5rem;margin-bottom:0.75rem;">📞</div>
+      <h3 style="font-family:'Fraunces',serif;color:var(--cafe);">{% if lang == 'en' %}Contact{% else %}Contacto{% endif %}</h3>
+      <p style="margin-top:0.5rem;color:#555;">(686) 555-0100</p>
+    </div>
+    <div class="about-card" style="border-left-color:var(--verde-claro);">
+      <div style="font-size:2.5rem;margin-bottom:0.75rem;">💚</div>
+      <h3 style="font-family:'Fraunces',serif;color:var(--cafe);">{% if lang == 'en' %}Our Promise{% else %}Nuestra Promesa{% endif %}</h3>
+      <p style="margin-top:0.5rem;color:#555;">{% if lang == 'en' %}Fresh every single day{% else %}Fresco todos los días{% endif %}</p>
+    </div>
+  </div>
+
+  <div style="text-align:center;">
+    <a href="{% url 'shop' %}" class="btn-primary">
+      {% if lang == 'en' %}🛒 Shop Our Products{% else %}🛒 Ver Nuestros Productos{% endif %}
+    </a>
+  </div>
+</div>
+{% endblock %}

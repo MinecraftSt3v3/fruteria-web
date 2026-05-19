@@ -1,0 +1,89 @@
+{% extends 'base.html' %}
+{% block title %}{% if lang == 'en' %}Receipt{% else %}Recibo{% endif %} {{ order.order_number }} — Frutería Elí{% endblock %}
+
+{% block content %}
+<div class="page-container">
+  <div style="text-align:center;margin-bottom:2rem;" class="no-print">
+    <div style="font-size:3rem;margin-bottom:0.5rem;">✅</div>
+    <h2 style="font-family:'Fraunces',serif;color:var(--verde);font-size:2rem;">
+      {% if lang == 'en' %}Order Confirmed!{% else %}¡Pedido Confirmado!{% endif %}
+    </h2>
+    <p style="color:#666;">{% if lang == 'en' %}Your order has been received. See you at the store!{% else %}Tu pedido ha sido recibido. ¡Te esperamos en la tienda!{% endif %}</p>
+  </div>
+
+  <div class="receipt">
+    <div class="receipt-header">
+      <div class="receipt-logo">🍉 Frutería <span>Elí</span></div>
+      <div style="font-size:0.8rem;color:#666;margin-top:0.3rem;">Mexicali, Baja California, México</div>
+      <div class="receipt-number">
+        {% if lang == 'en' %}Order #{% else %}Pedido #{% endif %} <strong>{{ order.order_number }}</strong>
+      </div>
+      <div style="font-size:0.85rem;color:#888;margin-top:0.3rem;">
+        {{ order.created_at|date:"d/m/Y H:i" }}
+      </div>
+      <div style="margin-top:0.75rem;">
+        <span class="status-badge status-{{ order.status }}">
+          {{ order.get_status_display }}
+        </span>
+      </div>
+    </div>
+
+    <div style="margin-bottom:1rem;">
+      <strong style="font-size:0.85rem;color:#666;text-transform:uppercase;letter-spacing:1px;">
+        {% if lang == 'en' %}Customer{% else %}Cliente{% endif %}:
+      </strong>
+      <span> {{ order.user.get_full_name|default:order.user.username }}</span>
+    </div>
+
+    <table class="receipt-table">
+      <thead>
+        <tr>
+          <th>{% if lang == 'en' %}Product{% else %}Producto{% endif %}</th>
+          <th style="text-align:center;">{% if lang == 'en' %}Qty{% else %}Cant.{% endif %}</th>
+          <th style="text-align:right;">{% if lang == 'en' %}Unit Price{% else %}P. Unit.{% endif %}</th>
+          <th style="text-align:right;">{% if lang == 'en' %}Subtotal{% else %}Subtotal{% endif %}</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in order.items.all %}
+        <tr>
+          <td>{% if lang == 'en' %}{{ item.product_name_en }}{% else %}{{ item.product_name_es }}{% endif %}</td>
+          <td style="text-align:center;">{{ item.quantity }} {{ item.unit }}</td>
+          <td style="text-align:right;">${{ item.price }}</td>
+          <td style="text-align:right;font-weight:700;">${{ item.get_subtotal }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    <div class="receipt-total">
+      <span>{% if lang == 'en' %}TOTAL{% else %}TOTAL{% endif %}</span>
+      <span>${{ order.total_amount }} MXN</span>
+    </div>
+
+    {% if order.notes %}
+    <div style="background:var(--crema);border-radius:10px;padding:1rem;margin-bottom:1.5rem;border-left:4px solid var(--amarillo);">
+      <strong style="font-size:0.85rem;">📝 {% if lang == 'en' %}Notes{% else %}Notas{% endif %}:</strong>
+      <p style="font-size:0.9rem;color:#555;margin-top:0.25rem;">{{ order.notes }}</p>
+    </div>
+    {% endif %}
+
+    <div style="background:linear-gradient(135deg,var(--verde),#1a4a35);color:white;border-radius:12px;padding:1.25rem;text-align:center;">
+      <div style="font-size:1.5rem;margin-bottom:0.5rem;">🏪</div>
+      <strong>{% if lang == 'en' %}Pick up your order at:{% else %}Recoge tu pedido en:{% endif %}</strong>
+      <p style="opacity:0.9;font-size:0.9rem;margin-top:0.4rem;">Frutería Elí — Primo Tapia, Baja California</p>
+      <p style="opacity:0.8;font-size:0.85rem;">{% if lang == 'en' %}Mon – Sat: 7am – 7pm{% else %}Lun – Sáb: 7am – 7pm{% endif %} · (686) 555-0100</p>
+    </div>
+
+    <div style="text-align:center;margin-top:1.5rem;color:#ccc;font-size:0.78rem;">
+      {% if lang == 'en' %}Thank you for shopping at Frutería Elí! 💚{% else %}¡Gracias por comprar en Frutería Elí! 💚{% endif %}
+    </div>
+  </div>
+
+  <div class="cart-actions no-print" style="margin-top:1.5rem;">
+    <button onclick="window.print()" class="btn-secondary">🖨️ {% if lang == 'en' %}Print Receipt{% else %}Imprimir Recibo{% endif %}</button>
+    <a href="{% url 'my_orders' %}" class="btn-secondary">📋 {% if lang == 'en' %}My Orders{% else %}Mis Pedidos{% endif %}</a>
+    <a href="{% url 'shop' %}" class="btn-primary">🛒 {% if lang == 'en' %}Shop Again{% else %}Seguir Comprando{% endif %}</a>
+  </div>
+</div>
+{% endblock %}

@@ -1,8 +1,15 @@
-FROM python:3.8.10
-COPY requirements.txt ./
-RUN pip3 install --user -r requirements.txt
-COPY . ./
-USER root
-RUN chmod +x docker_run_server.sh
-EXPOSE 80
-ENTRYPOINT ["./docker_run_server.sh"]
+FROM python:3.11-slim
+
+WORKDIR /app
+
+COPY requirements.txt .
+
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY . .
+
+RUN SECRET_KEY=temp-build-key python manage.py collectstatic --noinput
+
+EXPOSE 8000
+
+CMD ["gunicorn", "fruteria_eli.wsgi:application", "--bind", "0.0.0.0:8000"]

@@ -27,7 +27,7 @@ jobs:
         username: ${{ secrets.REGISTRY_USERNAME }}
         password: ${{ secrets.REGISTRY_PASSWORD }}
     - run: | 
-        docker buildx build --platform linux/amd64 -t ${{secrets.REGISTRY_LOGIN_SERVER}}.azurecr.io/fruteria-eli:latest .
+        docker buildx build --platform linux/amd64 -t fruteriaelireg.azurecr.io/fruteria-eli:latest .
         docker push fruteriaelireg.azurecr.io/fruteria-eli:latest
     - name: Deploy to Azure Container Instance
       uses: azure/aci-deploy@v1

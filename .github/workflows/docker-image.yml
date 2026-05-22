@@ -14,8 +14,29 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
+
+    - name: Login to Azure CLI
+      uses: azure/login@v1
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
+    
     - name: Build the Docker image
-      run: docker buildx build --platform linux/amd64 -t fruteriaelireg.azurecr.io/fruteria-eli:latest .
-      
-    - name: Push Docker Image Azure Registry
-      run: docker push fruteriaelireg.azurecr.io/fruteria-eli:latest
+      uses: azure/docker-login@v1
+      with:
+        login_server: ${{ secrets.REGISTRY_LOGIN_SERVER }}
+        username: ${{ secrets.REGISTRY_USERNAME }}
+        password: ${{ secrets.REGISTRY_PASSWORD }}
+    - run: | 
+        docker buildx build --platform linux/amd64 -t ${{secrets.REGISTRY_LOGIN_SERVER}}.azurecr.io/fruteria-eli:latest .
+        docker push fruteriaelireg.azurecr.io/fruteria-eli:latest
+    - name: Deploy to Azure Container Instance
+      uses: azure/aci-deploy@v1
+      with:
+        resource-group: ${{ secrets.RESOURCE_GROUP }}
+        dns-name-label: ${{ secrets.RESOURCE_GROUP }}${{ github.run_number }}
+        image: ${{ secrets.REGISTRY_LOGIN_SERVER }}/fruteriaeliapp:${{ github.sha }}
+        registry-login-server: ${{ secrets.REGISTRY_LOGIN_SERVER }}
+        registry-username: ${{ secrets.REGISTRY_USERNAME }}
+        registry-password: ${{ secrets.REGISTRY_PASSWORD }}
+        name: Fruteria Eli WebApp
+        location: Central Mexico

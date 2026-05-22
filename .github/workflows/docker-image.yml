@@ -1,0 +1,21 @@
+name: Docker Image CI
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: Build the Docker image
+      run: docker buildx build --platform linux/amd64 -t fruteriaelireg.azurecr.io/fruteria-eli:latest .
+      
+    - name: Push Docker Image Azure Registry
+      run: docker push fruteriaelireg.azurecr.io/fruteria-eli:latest

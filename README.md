@@ -16,35 +16,36 @@ Every push to main automatically:
 
 The workflow file lives at .github/workflows/deploy.yml.
 
-Running Locally
+## Running Locally
 Prerequisites
 
 - Python 3.11+
 - Docker (optional for local container testing)
 
 1. Clone the repo
-- git clone https://github.com/your-username/fruteria-eli.git
-cd fruteria-eli
+    - git clone https://github.com/your-username/fruteria-eli.git
+    - cd fruteria-eli
+
 2. Create and activate a virtual environment
-- bashpython -m venv myenv
-- source myenv/bin/activate        # macOS/Linux
+    - bashpython -m venv myenv
+    - source myenv/bin/activate        # macOS/Linux
 
 3. Install dependencies
-- bashpip install -r requirements.txt
+    - bashpip install -r requirements.txt
 
 4. Set up environment variables
-- Create a .env file in the project root:
-- SECRET_KEY=your-secret-key
-- DEBUG=True
-- STRIPE_PUBLIC_KEY=your-stripe-public-key
-- STRIPE_SECRET_KEY=your-stripe-secret-key
-
+    - Create a .env file in the project root:
+    -  SECRET_KEY=your-secret-key
+    - DEBUG=True
+    - STRIPE_PUBLIC_KEY=your-stripe-public-key
+    - STRIPE_SECRET_KEY=your-stripe-secret-key
+  
 5. Run migrations and start the server
-- bashpython manage.py migrate
-- python manage.py runserver
-- Visit http://127.0.0.1:8000
+    - bashpython manage.py migrate
+    - python manage.py runserver
+    - Visit http://127.0.0.1:8000
 
-Running with Docker
+## Running with Docker
 - bash# Build
 - docker buildx build --platform linux/amd64 -t fruteria-eli .
 
@@ -55,21 +56,8 @@ Run
 ## Deploying to Azure
 Deployment is handled automatically via GitHub Actions on every push to main. To deploy manually:
 bash# Build and push to ACR
-docker buildx build --platform linux/amd64 -t fruteriaelireg.azurecr.io/fruteria-eli:latest .
-docker push fruteriaelireg.azurecr.io/fruteria-eli:latest
+    - docker buildx build --platform linux/amd64 -t fruteriaelireg.azurecr.io/fruteria-eli:latest .
+    - docker push fruteriaelireg.azurecr.io/fruteria-eli:latest
 
-Restart App Service
+## Restart App Service
 az webapp restart --name fruteria-eli-app --resource-group fruteria-eli-rg
-
-Project Structure
-fruteria-eli/
-├── fruteria_eli/        # Django project settings, urls, wsgi
-├── store/               # Products, cart, orders, views
-├── accounts/            # User registration, login, profile
-├── templates/           # HTML templates
-├── static/              # CSS, JS, images
-├── staticfiles/         # Collected static files (generated)
-├── .github/workflows/   # GitHub Actions CI/CD
-├── Dockerfile
-├── requirements.txt
-└── manage.py

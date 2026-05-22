@@ -39,4 +39,4 @@ jobs:
         registry-username: ${{ secrets.REGISTRY_USERNAME }}
         registry-password: ${{ secrets.REGISTRY_PASSWORD }}
         name: Fruteria Eli WebApp
-        location: Central Mexico
+        location: mexicocentral

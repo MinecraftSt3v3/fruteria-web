@@ -23,7 +23,7 @@ jobs:
     - name: Build the Docker image
       uses: azure/docker-login@v1
       with:
-        login_server: ${{ secrets.REGISTRY_LOGIN_SERVER }}
+        login-server: ${{ secrets.REGISTRY_LOGIN_SERVER }}
         username: ${{ secrets.REGISTRY_USERNAME }}
         password: ${{ secrets.REGISTRY_PASSWORD }}
     - run: | 

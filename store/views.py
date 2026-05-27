@@ -15,9 +15,13 @@ def get_lang(request):
 
 def set_language(request):
     lang = request.GET.get('lang', 'es')
+    if lang not in ('es', 'en'):
+        lang = 'es'
     request.session['lang'] = lang
-    referer = request.META.get('HTTP_REFERER', '/')
-    return redirect(referer)
+    next_url = request.GET.get('next') or request.META.get('HTTP_REFERER') or '/'
+    if not next_url.startswith('/'):
+        next_url = '/'
+    return redirect(next_url)
 
 def home(request):
     lang = get_lang(request)

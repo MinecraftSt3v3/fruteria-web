@@ -49,8 +49,8 @@
         <tr>
           <td>{% if lang == 'en' %}{{ item.product_name_en }}{% else %}{{ item.product_name_es }}{% endif %}</td>
           <td style="text-align:center;">{{ item.quantity }} {{ item.unit }}</td>
-          <td style="text-align:right;">${{ item.price }}</td>
-          <td style="text-align:right;font-weight:700;">${{ item.get_subtotal }}</td>
+          <td style="text-align:right;">${{ item.price|floatformat:1 }}</td>
+          <td style="text-align:right;font-weight:700;">${{ item.get_subtotal|floatformat:1 }}</td>
         </tr>
         {% endfor %}
       </tbody>
@@ -58,7 +58,7 @@
 
     <div class="receipt-total">
       <span>{% if lang == 'en' %}TOTAL{% else %}TOTAL{% endif %}</span>
-      <span>${{ order.total_amount }} MXN</span>
+      <span>${{ order.total_amount|floatformat:1 }} MXN</span>
     </div>
 
     {% if order.notes %}
@@ -68,11 +68,21 @@
     </div>
     {% endif %}
 
+    {% if order.payment_status == 'cash_on_delivery' %}
+    <div style="background:linear-gradient(135deg,#fffbea,#fff3cd);border:2px solid var(--amarillo);border-radius:12px;padding:1.25rem;text-align:center;margin-bottom:1.5rem;">
+      <div style="font-size:1.5rem;margin-bottom:0.4rem;">💵</div>
+      <strong style="color:var(--cafe);">{% if lang == 'en' %}Cash on Delivery{% else %}Pago en Efectivo al Entregar{% endif %}</strong>
+      <p style="font-size:0.88rem;color:#666;margin-top:0.3rem;">
+        {% if lang == 'en' %}Our delivery driver will collect ${{ order.total_amount|floatformat:1 }} MXN when your order arrives.{% else %}Nuestro repartidor cobrará ${{ order.total_amount|floatformat:1 }} MXN al entregar tu pedido.{% endif %}
+      </p>
+    </div>
+    {% endif %}
+
     <div style="background:linear-gradient(135deg,var(--verde),#1a4a35);color:white;border-radius:12px;padding:1.25rem;text-align:center;">
       <div style="font-size:1.5rem;margin-bottom:0.5rem;">🏪</div>
       <strong>{% if lang == 'en' %}Pick up your order at:{% else %}Recoge tu pedido en:{% endif %}</strong>
       <p style="opacity:0.9;font-size:0.9rem;margin-top:0.4rem;">Frutería Elí — Primo Tapia, Baja California</p>
-      <p style="opacity:0.8;font-size:0.85rem;">{% if lang == 'en' %}Mon – Sat: 7am – 7pm{% else %}Lun – Sáb: 7am – 7pm{% endif %} · (686) 555-0100</p>
+      <p style="opacity:0.8;font-size:0.85rem;">{% if lang == 'en' %}Mon – Sat: 7am – 7pm{% else %}Lun – Sáb: 7am – 7pm{% endif %} · +52 664-112-3841</p>
     </div>
 
     <div style="text-align:center;margin-top:1.5rem;color:#ccc;font-size:0.78rem;">

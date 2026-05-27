@@ -6,7 +6,7 @@
   <h1 class="page-header">💳 {% if lang == 'en' %}Checkout{% else %}Finalizar Pedido{% endif %}</h1>
 
   <div class="checkout-grid">
-    <!-- LEFT: Notes -->
+    <!-- LEFT: Notes + Pickup -->
     <div>
       <div class="checkout-card">
         <h3>📝 {% if lang == 'en' %}Order Notes{% else %}Notas del Pedido{% endif %}</h3>
@@ -38,59 +38,116 @@
         {% for item in cart.items.all %}
         <div class="order-summary-item">
           <span>{% if lang == 'en' %}{{ item.product.name_en }}{% else %}{{ item.product.name_es }}{% endif %} × {{ item.quantity }} {{ item.product.unit }}</span>
-          <strong>${{ item.get_subtotal }}</strong>
+          <strong>${{ item.get_subtotal|floatformat:1 }}</strong>
         </div>
         {% endfor %}
 
         <div class="order-total-line">
-          <span>{% if lang == 'en' %}Total{% else %}Total{% endif %}</span>
-          <span>${{ cart.get_total }} MXN</span>
+          <span>Total</span>
+          <span>${{ cart.get_total|floatformat:1 }} MXN</span>
         </div>
       </div>
 
-      <!-- Stripe Payment Card -->
+      <!-- Payment Method -->
       <div class="checkout-card" style="margin-top:1.5rem;">
-        <div class="mp-banner">
-          <strong>💳 Pagar con tarjeta (Stripe)</strong>
-          <span>{% if lang == 'en' %}Secure card payment{% else %}Pago con tarjeta seguro{% endif %}</span>
+        <h3>💳 {% if lang == 'en' %}Payment Method{% else %}Método de Pago{% endif %}</h3>
+
+        <div style="display:flex;gap:0.75rem;margin-bottom:1.25rem;">
+          <button type="button" id="pay-card-tab"
+            onclick="selectPayment('card')"
+            style="flex:1;padding:0.65rem;border-radius:12px;border:2px solid var(--verde);background:var(--verde);color:white;font-family:'Nunito',sans-serif;font-weight:700;font-size:0.95rem;cursor:pointer;transition:all 0.2s;">
+            💳 {% if lang == 'en' %}Card{% else %}Tarjeta{% endif %}
+          </button>
+          <button type="button" id="pay-cash-tab"
+            onclick="selectPayment('cash')"
+            style="flex:1;padding:0.65rem;border-radius:12px;border:2px solid var(--verde);background:transparent;color:var(--verde);font-family:'Nunito',sans-serif;font-weight:700;font-size:0.95rem;cursor:pointer;transition:all 0.2s;">
+            💵 {% if lang == 'en' %}Cash{% else %}Efectivo{% endif %}
+          </button>
         </div>
 
-        <div id="stripe-card-container" style="margin-top:1rem;">
-          <div id="card-element" style="padding:12px;border:1px solid #e6e6e6;border-radius:6px;"></div>
-          <div id="card-errors" role="alert" style="color: red;margin-top:0.5rem;"></div>
+        <!-- Card section -->
+        <div id="card-payment-section">
+          <div class="mp-banner">
+            <strong>💳 {% if lang == 'en' %}Secure card payment (Stripe){% else %}Pago con tarjeta seguro (Stripe){% endif %}</strong>
+            <span>{% if lang == 'en' %}Your card details are encrypted{% else %}Tus datos de tarjeta están cifrados{% endif %}</span>
+          </div>
+          <div id="card-element" style="padding:12px;border:1px solid #e6e6e6;border-radius:6px;margin-top:1rem;"></div>
+          <div id="card-errors" role="alert" style="color:red;margin-top:0.5rem;"></div>
           <button id="stripe-pay-button" type="button" class="btn-primary" style="width:100%;justify-content:center;font-size:1.1rem;padding:1rem;margin-top:0.75rem;">
-            {% if lang == 'en' %}Pay with Card — ${{ cart.get_total }} MXN{% else %}Pagar con tarjeta — ${{ cart.get_total }} MXN{% endif %}
+            {% if lang == 'en' %}Pay with Card — ${{ cart.get_total|floatformat:1 }} MXN{% else %}Pagar con tarjeta — ${{ cart.get_total|floatformat:1 }} MXN{% endif %}
+          </button>
+        </div>
+
+        <!-- Cash section -->
+        <div id="cash-payment-section" style="display:none;">
+          <div style="background:linear-gradient(135deg,#fffbea,#fff3cd);border:2px solid var(--amarillo);border-radius:12px;padding:1.25rem;text-align:center;margin-bottom:1rem;">
+            <div style="font-size:2rem;margin-bottom:0.5rem;">🚚💵</div>
+            <strong style="color:var(--cafe);font-size:1rem;">
+              {% if lang == 'en' %}Cash on Delivery{% else %}Pago en Efectivo al Entregar{% endif %}
+            </strong>
+            <p style="font-size:0.88rem;color:#666;margin-top:0.4rem;">
+              {% if lang == 'en' %}Our delivery driver will collect ${{ cart.get_total|floatformat:1 }} MXN in cash when your order arrives.{% else %}Nuestro repartidor cobrará ${{ cart.get_total|floatformat:1 }} MXN en efectivo al entregar tu pedido.{% endif %}
+            </p>
+          </div>
+          <button id="cash-pay-button" type="button" class="btn-primary" style="width:100%;justify-content:center;font-size:1.1rem;padding:1rem;background:var(--naranja);">
+            {% if lang == 'en' %}✅ Confirm Order — Pay Cash on Delivery{% else %}✅ Confirmar Pedido — Pagar en Efectivo{% endif %}
           </button>
         </div>
       </div>
 
+      <!-- Hidden order form -->
+      <form method="post" action="{% url 'place_order' %}" id="order-form">
+        {% csrf_token %}
+        <input type="hidden" name="notes" id="notes-hidden">
+        <input type="hidden" name="payment_id" id="payment-id-hidden" value="">
+        <input type="hidden" name="payment_method" id="payment-method-hidden" value="card">
+      </form>
 
-        <!-- Fallback / Demo button -->
-        <form method="post" action="{% url 'place_order' %}" id="order-form">
-          {% csrf_token %}
-          <input type="hidden" name="notes" id="notes-hidden">
-          <input type="hidden" name="payment_id" id="payment-id-hidden" value="">
-        </form>
-
-        <p style="font-size:0.78rem;color:#999;text-align:center;margin-top:0.75rem;">
-          {% if lang == 'en' %}🔒 Your payment is processed securely by MercadoPago{% else %}🔒 Tu pago es procesado de forma segura por MercadoPago{% endif %}
-        </p>
-      </div>
+      <p style="font-size:0.78rem;color:#999;text-align:center;margin-top:0.75rem;">
+        🔒 {% if lang == 'en' %}Your information is handled securely{% else %}Tu información se maneja de forma segura{% endif %}
+      </p>
     </div>
   </div>
 </div>
 {% endblock %}
 
 {% block extra_js %}
-<!-- Stripe.js -->
 <script src="https://js.stripe.com/v3/"></script>
 
 <script>
-function submitOrder(e) {
-  document.getElementById('notes-hidden').value = document.getElementById('order-notes').value;
+function selectPayment(method) {
+  document.getElementById('payment-method-hidden').value = method;
+  const cardSection = document.getElementById('card-payment-section');
+  const cashSection = document.getElementById('cash-payment-section');
+  const cardTab = document.getElementById('pay-card-tab');
+  const cashTab = document.getElementById('pay-cash-tab');
+  if (method === 'cash') {
+    cardSection.style.display = 'none';
+    cashSection.style.display = 'block';
+    cashTab.style.background = 'var(--naranja)';
+    cashTab.style.color = 'white';
+    cashTab.style.borderColor = 'var(--naranja)';
+    cardTab.style.background = 'transparent';
+    cardTab.style.color = 'var(--verde)';
+    cardTab.style.borderColor = 'var(--verde)';
+  } else {
+    cardSection.style.display = 'block';
+    cashSection.style.display = 'none';
+    cardTab.style.background = 'var(--verde)';
+    cardTab.style.color = 'white';
+    cardTab.style.borderColor = 'var(--verde)';
+    cashTab.style.background = 'transparent';
+    cashTab.style.color = 'var(--verde)';
+    cashTab.style.borderColor = 'var(--verde)';
+  }
 }
 
-// Stripe Elements: create PaymentIntent on server and confirm card payment
+document.getElementById('cash-pay-button').addEventListener('click', function() {
+  document.getElementById('notes-hidden').value = document.getElementById('order-notes').value;
+  document.getElementById('payment-id-hidden').value = '';
+  document.getElementById('order-form').submit();
+});
+
 try {
   const stripe = Stripe('{{ stripe_public_key }}');
   const elements = stripe.elements();
@@ -98,22 +155,19 @@ try {
   card.mount('#card-element');
 
   card.on('change', function(event) {
-    const displayError = document.getElementById('card-errors');
-    displayError.textContent = event.error ? event.error.message : '';
+    document.getElementById('card-errors').textContent = event.error ? event.error.message : '';
   });
 
   document.getElementById('stripe-pay-button').addEventListener('click', async function() {
-    // ensure notes are captured
     document.getElementById('notes-hidden').value = document.getElementById('order-notes').value;
 
-    // create PaymentIntent on the backend
     const resp = await fetch("{% url 'create_payment_intent' %}", {
       method: 'POST',
       headers: {
         'X-CSRFToken': '{{ csrf_token }}',
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify({}) // extend if you need to send metadata
+      body: JSON.stringify({})
     });
 
     const data = await resp.json();
@@ -122,15 +176,13 @@ try {
       return;
     }
 
-    const clientSecret = data.client_secret;
-    const result = await stripe.confirmCardPayment(clientSecret, {
+    const result = await stripe.confirmCardPayment(data.client_secret, {
       payment_method: { card: card }
     });
 
     if (result.error) {
       document.getElementById('card-errors').textContent = result.error.message || 'Payment failed';
     } else if (result.paymentIntent && result.paymentIntent.status === 'succeeded') {
-      // set payment id and submit order form
       document.getElementById('payment-id-hidden').value = result.paymentIntent.id;
       document.getElementById('order-form').submit();
     } else {
@@ -141,5 +193,4 @@ try {
   console.log('Stripe not configured or error initializing:', e);
 }
 </script>
-
 {% endblock %}

@@ -134,13 +134,20 @@ def place_order(request):
         return redirect('cart')
 
     payment_id = request.POST.get('payment_id', '')
+    payment_method = request.POST.get('payment_method', 'card')
     notes = request.POST.get('notes', '')
+
+    if payment_method == 'cash':
+        payment_id = 'CASH'
+        payment_status = 'cash_on_delivery'
+    else:
+        payment_status = 'approved' if payment_id else 'pending'
 
     order = Order.objects.create(
         user=request.user,
         total_amount=cart_obj.get_total(),
         payment_id=payment_id,
-        payment_status='approved' if payment_id else 'pending',
+        payment_status=payment_status,
         notes=notes,
     )
     for item in cart_obj.items.all():

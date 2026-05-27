@@ -23,7 +23,7 @@
           <strong>{% if lang == 'en' %}{{ item.product.name_en }}{% else %}{{ item.product.name_es }}{% endif %}</strong>
           <br><small style="color:#999;">{{ item.product.unit }}</small>
         </td>
-        <td>${{ item.product.price }}</td>
+        <td>${{ item.product.price|floatformat:1 }}</td>
         <td>
           <form method="post" action="{% url 'update_cart' item.id %}" style="display:inline;">
             {% csrf_token %}
@@ -31,7 +31,7 @@
             <button type="submit" style="background:var(--verde-claro);color:white;border:none;padding:0.4rem 0.7rem;border-radius:8px;cursor:pointer;font-weight:700;margin-left:4px;">✓</button>
           </form>
         </td>
-        <td><strong>${{ item.get_subtotal }}</strong></td>
+        <td><strong>${{ item.get_subtotal|floatformat:1 }}</strong></td>
         <td>
           <a href="{% url 'remove_from_cart' item.id %}" class="btn-danger" onclick="return confirm('{% if lang == "en" %}Remove this item?{% else %}¿Quitar este producto?{% endif %}')">✕</a>
         </td>
@@ -41,7 +41,7 @@
         <td colspan="3" style="text-align:right;padding-right:1.5rem;">
           {% if lang == 'en' %}Total:{% else %}Total:{% endif %}
         </td>
-        <td colspan="2" style="color:var(--rojo);">${{ cart.get_total }}</td>
+        <td colspan="2" style="color:var(--rojo);">${{ cart.get_total|floatformat:1 }}</td>
       </tr>
     </tbody>
   </table>

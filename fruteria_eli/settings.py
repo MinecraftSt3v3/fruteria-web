@@ -98,3 +98,6 @@ STRIPE_SECRET_KEY = os.getenv('STRIPE_SECRET_KEY')
 
 SESSION_SAVE_EVERY_REQUEST = True
 SESSION_COOKIE_AGE = 86400 * 30  # 30 days
+
+CSRF_TRUSTED_ORIGINS = ['https://fruteria-eli-app.azurewebsites.net']
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')

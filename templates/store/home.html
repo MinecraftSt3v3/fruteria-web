@@ -28,51 +28,60 @@
   <div class="carousel-wrapper" id="carousel">
     <div class="carousel-track" id="track">
       {% for product in featured %}
-      <div class="carousel-slide">
-        <div class="carousel-info">
-          <span class="special-tag">{% if lang == 'en' %}✨ Special Offer{% else %}✨ Oferta Especial{% endif %}</span>
-          <h2>{% if lang == 'en' %}{{ product.name_en }}{% else %}{{ product.name_es }}{% endif %}</h2>
-          <p style="opacity:0.85;margin:0.5rem 0;">
-            {% if lang == 'en' %}{{ product.description_en }}{% else %}{{ product.description_es }}{% endif %}
-          </p>
-          <div class="price">${{ product.price }} / {{ product.unit }}</div>
-          {% if user.is_authenticated %}
-            <a href="{% url 'add_to_cart' product.id %}" class="btn-primary" style="margin-top:1rem;">
-              {% if lang == 'en' %}🛒 Add to Cart{% else %}🛒 Agregar{% endif %}
-            </a>
+      <div class="specials-item">
+        <div class="product-card">
+          <div class="special-ribbon">{% if lang == 'en' %}Special{% else %}Oferta{% endif %}</div>
+
+          {% if product.image %}
+            <img src="{{ product.image.url }}" alt="{{ product.name_es }}" class="product-img">
           {% else %}
-            <a href="{% url 'login' %}" class="btn-primary" style="margin-top:1rem;">
-              {% if lang == 'en' %}🔑 Login to Order{% else %}🔑 Inicia Sesión{% endif %}
-            </a>
+            <div class="product-img-placeholder">
+              {% if 'mango' in product.name_es|lower %}🥭
+              {% elif 'piña' in product.name_es|lower or 'pina' in product.name_es|lower %}🍍
+              {% elif 'fresa' in product.name_es|lower %}🍓
+              {% elif 'manzana' in product.name_es|lower %}🍎
+              {% elif 'tomate' in product.name_es|lower or 'jitomate' in product.name_es|lower %}🍅
+              {% elif 'naranja' in product.name_es|lower %}🍊
+              {% elif 'limón' in product.name_es|lower or 'limon' in product.name_es|lower %}🍋
+              {% elif 'sandía' in product.name_es|lower or 'sandia' in product.name_es|lower %}🍉
+              {% elif 'uva' in product.name_es|lower %}🍇
+              {% elif 'aguacate' in product.name_es|lower %}🥑
+              {% elif 'chile' in product.name_es|lower %}🌶️
+              {% elif 'elote' in product.name_es|lower or 'maíz' in product.name_es|lower %}🌽
+              {% elif 'plátano' in product.name_es|lower or 'platano' in product.name_es|lower %}🍌
+              {% elif 'pepino' in product.name_es|lower %}🥒
+              {% elif 'zanahoria' in product.name_es|lower %}🥕
+              {% else %}🌿{% endif %}
+            </div>
           {% endif %}
-        </div>
-        <div class="carousel-emoji">
-          {% if 'mango' in product.name_es|lower %}🥭
-          {% elif 'piña' in product.name_es|lower or 'pina' in product.name_es|lower %}🍍
-          {% elif 'fresa' in product.name_es|lower %}🍓
-          {% elif 'manzana' in product.name_es|lower %}🍎
-          {% elif 'tomate' in product.name_es|lower or 'jitomate' in product.name_es|lower %}🍅
-          {% elif 'naranja' in product.name_es|lower %}🍊
-          {% elif 'limón' in product.name_es|lower or 'limon' in product.name_es|lower %}🍋
-          {% elif 'sandía' in product.name_es|lower or 'sandia' in product.name_es|lower %}🍉
-          {% elif 'uva' in product.name_es|lower %}🍇
-          {% elif 'aguacate' in product.name_es|lower %}🥑
-          {% elif 'chile' in product.name_es|lower %}🌶️
-          {% elif 'maíz' in product.name_es|lower or 'elote' in product.name_es|lower %}🌽
-          {% elif 'plátano' in product.name_es|lower or 'platano' in product.name_es|lower %}🍌
-          {% else %}🌿{% endif %}
+
+          <div class="product-body">
+            <div class="product-category">{{ product.category.name_es|default:"🌱" }}</div>
+            <div class="product-name">{% if lang == 'en' %}{{ product.name_en }}{% else %}{{ product.name_es }}{% endif %}</div>
+            <div>
+              <span class="product-price">${{ product.price|floatformat:1 }}</span>
+              <span class="product-unit"> / {{ product.unit }}</span>
+            </div>
+          </div>
+          <div class="product-actions">
+            {% if user.is_authenticated %}
+              <a href="{% url 'add_to_cart' product.id %}" class="btn-add">
+                {% if lang == 'en' %}+ Add to Cart{% else %}+ Agregar al Carrito{% endif %}
+              </a>
+            {% else %}
+              <a href="{% url 'login' %}" class="btn-add needs-login">
+                {% if lang == 'en' %}🔑 Login to Order{% else %}🔑 Inicia Sesión para Pedir{% endif %}
+              </a>
+            {% endif %}
+          </div>
         </div>
       </div>
       {% endfor %}
     </div>
-    <button class="carousel-btn carousel-prev" onclick="moveCarousel(-1)">‹</button>
-    <button class="carousel-btn carousel-next" onclick="moveCarousel(1)">›</button>
+    <button class="carousel-btn carousel-prev" id="specials-prev">‹</button>
+    <button class="carousel-btn carousel-next" id="specials-next">›</button>
   </div>
-  <div class="carousel-dots" id="dots">
-    {% for product in featured %}
-      <button class="dot {% if forloop.first %}active{% endif %}" onclick="goToSlide({{ forloop.counter0 }})"></button>
-    {% endfor %}
-  </div>
+  <div class="carousel-dots" id="dots"></div>
 </section>
 {% endif %}
 
@@ -181,22 +190,95 @@
 
 {% block extra_js %}
 <script>
-let current = 0;
-const slides = document.querySelectorAll('.carousel-slide');
-const dots = document.querySelectorAll('.dot');
+(function () {
+  const items = document.querySelectorAll('.specials-item');
+  if (!items.length) return;
 
-function goToSlide(n) {
-  current = n;
-  document.getElementById('track').style.transform = `translateX(-${current * 100}%)`;
-  dots.forEach((d, i) => d.classList.toggle('active', i === current));
-}
+  const totalItems = items.length;
+  let currentItem = 0;
+  let autoTimer;
 
-function moveCarousel(dir) {
-  current = (current + dir + slides.length) % slides.length;
-  goToSlide(current);
-}
+  const perView = () => window.innerWidth <= 768 ? 1 : 3;
 
-// Auto-advance
-setInterval(() => moveCarousel(1), 4000);
+  function totalSlides() {
+    return Math.ceil(totalItems / perView());
+  }
+
+  function buildDots() {
+    const dotsEl = document.getElementById('dots');
+    dotsEl.innerHTML = '';
+    const n = totalSlides();
+    for (let i = 0; i < n; i++) {
+      const btn = document.createElement('button');
+      btn.className = 'dot' + (i === 0 ? ' active' : '');
+      btn.addEventListener('click', () => goToGroup(i));
+      dotsEl.appendChild(btn);
+    }
+    updateNavVisibility();
+  }
+
+  function updateDots() {
+    const activeGroup = Math.floor(currentItem / perView());
+    document.querySelectorAll('#dots .dot').forEach((d, i) => {
+      d.classList.toggle('active', i === activeGroup);
+    });
+  }
+
+  function updateNavVisibility() {
+    const multi = totalSlides() > 1;
+    document.getElementById('specials-prev').style.display = multi ? '' : 'none';
+    document.getElementById('specials-next').style.display = multi ? '' : 'none';
+    document.getElementById('dots').style.display = multi ? '' : 'none';
+  }
+
+  function applyTransform() {
+    const wrapper = document.getElementById('carousel');
+    const itemWidth = wrapper.offsetWidth / perView();
+    document.getElementById('track').style.transform = `translateX(-${currentItem * itemWidth}px)`;
+    updateDots();
+  }
+
+  function goToGroup(groupIndex) {
+    currentItem = groupIndex * perView();
+    if (currentItem >= totalItems) currentItem = 0;
+    applyTransform();
+  }
+
+  function moveCarousel(dir) {
+    const pv = perView();
+    currentItem += dir * pv;
+    if (currentItem < 0) {
+      currentItem = (totalSlides() - 1) * pv;
+    } else if (currentItem >= totalItems) {
+      currentItem = 0;
+    }
+    applyTransform();
+  }
+
+  document.getElementById('specials-prev').addEventListener('click', () => {
+    clearInterval(autoTimer);
+    moveCarousel(-1);
+    startAuto();
+  });
+  document.getElementById('specials-next').addEventListener('click', () => {
+    clearInterval(autoTimer);
+    moveCarousel(1);
+    startAuto();
+  });
+
+  function startAuto() {
+    autoTimer = setInterval(() => moveCarousel(1), 4000);
+  }
+
+  buildDots();
+  applyTransform();
+  startAuto();
+
+  window.addEventListener('resize', () => {
+    currentItem = 0;
+    buildDots();
+    applyTransform();
+  });
+}());
 </script>
 {% endblock %}

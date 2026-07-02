@@ -40,17 +40,24 @@ def about(request):
 def shop(request):
     lang = get_lang(request)
     category_slug = request.GET.get('category')
+    search_query = request.GET.get('q', '').strip()
     products = Product.objects.filter(is_available=True)
     categories = Category.objects.all()
     active_cat = None
     if category_slug:
         active_cat = get_object_or_404(Category, slug=category_slug)
         products = products.filter(category=active_cat)
+    if search_query:
+        from django.db.models import Q
+        products = products.filter(
+            Q(name_es__icontains=search_query) | Q(name_en__icontains=search_query)
+        )
     return render(request, 'store/shop.html', {
         'products': products,
         'categories': categories,
         'active_cat': active_cat,
         'lang': lang,
+        'search_query': search_query,
     })
 
 @login_required

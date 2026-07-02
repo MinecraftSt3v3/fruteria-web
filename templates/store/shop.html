@@ -10,17 +10,48 @@
 </div>
 
 <section class="products-section">
+  <!-- Search Bar -->
+  <div class="shop-search-wrap">
+    <form method="get" action="{% url 'shop' %}" class="shop-search-form">
+      {% if active_cat %}
+        <input type="hidden" name="category" value="{{ active_cat.slug }}">
+      {% endif %}
+      <input
+        type="search"
+        name="q"
+        value="{{ search_query }}"
+        placeholder="🔍 Buscar / Search..."
+        class="shop-search-input"
+        autocomplete="off"
+      >
+      <button type="submit" class="shop-search-btn">
+        {% if lang == 'en' %}Search{% else %}Buscar{% endif %}
+      </button>
+    </form>
+  </div>
+
   <!-- Category Filter -->
   {% if categories %}
   <div class="category-bar">
-    <a href="{% url 'shop' %}" class="cat-pill {% if not active_cat %}active{% endif %}">
+    <a href="{% url 'shop' %}{% if search_query %}?q={{ search_query }}{% endif %}" class="cat-pill {% if not active_cat %}active{% endif %}">
       {% if lang == 'en' %}All{% else %}Todo{% endif %}
     </a>
     {% for cat in categories %}
-      <a href="{% url 'shop' %}?category={{ cat.slug }}" class="cat-pill {% if active_cat == cat %}active{% endif %}">
+      <a href="{% url 'shop' %}?category={{ cat.slug }}{% if search_query %}&q={{ search_query }}{% endif %}" class="cat-pill {% if active_cat == cat %}active{% endif %}">
         {% if lang == 'en' %}{{ cat.name_en }}{% else %}{{ cat.name_es }}{% endif %}
       </a>
     {% endfor %}
+  </div>
+  {% endif %}
+
+  <!-- Search results label -->
+  {% if search_query %}
+  <div class="search-results-label">
+    {% if lang == 'en' %}Results for: <strong>{{ search_query }}</strong>{% else %}Resultados para: <strong>{{ search_query }}</strong>{% endif %}
+    &nbsp;·&nbsp;
+    <a href="{% url 'shop' %}{% if active_cat %}?category={{ active_cat.slug }}{% endif %}" class="search-clear-link">
+      {% if lang == 'en' %}Clear{% else %}Limpiar{% endif %}
+    </a>
   </div>
   {% endif %}
 
@@ -66,8 +97,13 @@
     </div>
     {% empty %}
     <div class="empty-state" style="grid-column:1/-1;">
-      <div class="empty-emoji">🌱</div>
-      <h3>{% if lang == 'en' %}No products found{% else %}No se encontraron productos{% endif %}</h3>
+      <div class="empty-emoji">{% if search_query %}🔍{% else %}🌱{% endif %}</div>
+      {% if search_query %}
+        <h3>{% if lang == 'en' %}No products match "{{ search_query }}"{% else %}Ningún producto coincide con "{{ search_query }}"{% endif %}</h3>
+        <p style="color:#999;margin-top:0.5rem;">{% if lang == 'en' %}Try a different term or browse by category{% else %}Intenta otro término o navega por categoría{% endif %}</p>
+      {% else %}
+        <h3>{% if lang == 'en' %}No products found{% else %}No se encontraron productos{% endif %}</h3>
+      {% endif %}
     </div>
     {% endfor %}
   </div>

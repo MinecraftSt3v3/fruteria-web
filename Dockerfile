@@ -10,6 +10,9 @@ COPY . .
 
 RUN SECRET_KEY=temp-build-key python manage.py collectstatic --noinput
 
+COPY entrypoint.sh .
+RUN chmod +x entrypoint.sh
+
 EXPOSE 8000
 
-CMD ["gunicorn", "fruteria_eli.wsgi:application", "--bind", "0.0.0.0:8000"]
+CMD ["./entrypoint.sh"]

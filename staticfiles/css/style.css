@@ -423,7 +423,7 @@ body {
 
 .products-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
   gap: 1.5rem;
   max-width: 1200px;
   margin: 0 auto;
@@ -960,19 +960,83 @@ footer .footer-logo {
 .empty-state .empty-emoji { font-size: 4rem; margin-bottom: 1rem; }
 .empty-state h3 { font-family: 'Fraunces', serif; font-size: 1.5rem; color: #666; }
 
+/* ── HAMBURGER TOGGLE (hidden on desktop) ── */
+.nav-toggle {
+  display: none;
+  background: rgba(255,255,255,0.15);
+  border: 2px solid rgba(255,255,255,0.4);
+  color: var(--crema);
+  font-size: 1.4rem;
+  cursor: pointer;
+  border-radius: 8px;
+  padding: 0.25rem 0.65rem;
+  line-height: 1;
+  transition: background 0.2s;
+}
+
+.nav-toggle:hover { background: rgba(255,255,255,0.3); }
+
 /* ── RESPONSIVE ── */
 @media (max-width: 768px) {
-  .navbar { padding: 0.75rem 1rem; }
+  .navbar {
+    padding: 0.75rem 1rem;
+    flex-wrap: wrap;
+    position: relative;
+  }
+
+  .nav-toggle { display: block; }
+
   .brand-text { font-size: 1.3rem; }
-  .nav-links { gap: 0.25rem; }
-  .nav-links a { padding: 0.4rem 0.6rem; font-size: 0.8rem; }
+
+  .nav-links {
+    display: none;
+    flex-direction: column;
+    width: 100%;
+    gap: 0.25rem;
+    padding: 0.5rem 0;
+    border-top: 1px solid rgba(255,255,255,0.2);
+    margin-top: 0.5rem;
+  }
+
+  .nav-links.open { display: flex; }
+
+  .nav-links a {
+    padding: 0.7rem 1rem;
+    font-size: 0.95rem;
+    border-radius: 10px;
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .lang-toggle {
+    display: none;
+    width: 100%;
+    justify-content: center;
+    padding: 0.5rem 0;
+    margin-top: 0.25rem;
+    border-top: 1px solid rgba(255,255,255,0.2);
+    background: none;
+    border-radius: 0;
+  }
+
+  .lang-toggle.open { display: flex; }
+
   .carousel-slide { flex-direction: column; text-align: center; padding: 2rem; }
   .carousel-emoji { font-size: 4rem; }
   .carousel-info h2 { font-size: 1.8rem; }
   .checkout-grid { grid-template-columns: 1fr; }
-  .info-strip { gap: 1rem; }
+  .info-strip { gap: 1rem; font-size: 0.8rem; }
   .products-grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); }
   .order-card { flex-direction: column; align-items: flex-start; }
+  .cart-actions { flex-direction: column; }
+
+  /* Prevent wide tables from overflowing the viewport */
+  .cart-table,
+  .receipt-table {
+    display: block;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
 }
 
 @media print {

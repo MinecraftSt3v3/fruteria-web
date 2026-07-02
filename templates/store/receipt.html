@@ -8,7 +8,13 @@
     <h2 style="font-family:'Fraunces',serif;color:var(--verde);font-size:2rem;">
       {% if lang == 'en' %}Order Confirmed!{% else %}¡Pedido Confirmado!{% endif %}
     </h2>
-    <p style="color:#666;">{% if lang == 'en' %}Your order has been received. See you at the store!{% else %}Tu pedido ha sido recibido. ¡Te esperamos en la tienda!{% endif %}</p>
+    <p style="color:#666;">
+      {% if order.fulfillment_type == 'delivery' %}
+        {% if lang == 'en' %}Your order has been received. We'll deliver it at the scheduled time!{% else %}¡Tu pedido fue recibido. Lo entregaremos a la hora acordada!{% endif %}
+      {% else %}
+        {% if lang == 'en' %}Your order has been received. See you at the store!{% else %}¡Tu pedido fue recibido. ¡Te esperamos en la tienda!{% endif %}
+      {% endif %}
+    </p>
   </div>
 
   <div class="receipt">
@@ -35,13 +41,74 @@
       <span> {{ order.user.get_full_name|default:order.user.username }}</span>
     </div>
 
+    <!-- Fulfillment info -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1.5rem;">
+      <div style="background:var(--crema);border-radius:10px;padding:1rem;">
+        <div style="font-size:0.75rem;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:1px;margin-bottom:0.4rem;">
+          {% if lang == 'en' %}Fulfillment{% else %}Tipo de Entrega{% endif %}
+        </div>
+        {% if order.fulfillment_type == 'delivery' %}
+          <div style="font-weight:700;color:var(--verde);font-size:1rem;">🚚 {% if lang == 'en' %}Delivery{% else %}Entrega a Domicilio{% endif %}</div>
+        {% else %}
+          <div style="font-weight:700;color:var(--verde);font-size:1rem;">🏪 {% if lang == 'en' %}Pick Up{% else %}Recoger en Tienda{% endif %}</div>
+        {% endif %}
+      </div>
+      <div style="background:var(--crema);border-radius:10px;padding:1rem;">
+        <div style="font-size:0.75rem;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:1px;margin-bottom:0.4rem;">
+          {% if lang == 'en' %}Payment{% else %}Pago{% endif %}
+        </div>
+        <div style="font-weight:700;color:var(--cafe);font-size:1rem;">💵 {% if lang == 'en' %}Cash on Delivery{% else %}Efectivo al Entregar{% endif %}</div>
+      </div>
+    </div>
+
+    {% if order.scheduled_time %}
+    <div style="background:linear-gradient(135deg,#fffbea,#fff3cd);border:2px solid var(--amarillo);border-radius:10px;padding:1rem;margin-bottom:1.5rem;">
+      <div style="font-size:0.75rem;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:1px;margin-bottom:0.4rem;">
+        🕐 {% if lang == 'en' %}Scheduled Time{% else %}Hora Programada{% endif %}
+      </div>
+      <div style="font-weight:700;color:var(--cafe);font-size:1rem;">
+        {{ order.scheduled_time|date:"l, d/m/Y — g:i A" }}
+      </div>
+    </div>
+    {% endif %}
+
+    {% if order.fulfillment_type == 'delivery' %}
+    <div style="background:var(--crema);border-radius:10px;padding:1rem;margin-bottom:1.5rem;">
+      <div style="font-size:0.75rem;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:1px;margin-bottom:0.75rem;">
+        📍 {% if lang == 'en' %}Delivery Details{% else %}Datos de Entrega{% endif %}
+      </div>
+      {% if order.delivery_address %}
+      <div style="margin-bottom:0.4rem;"><span style="color:#888;font-size:0.85rem;">{% if lang == 'en' %}Address{% else %}Dirección{% endif %}:</span> <strong>{{ order.delivery_address }}</strong></div>
+      {% endif %}
+      {% if order.delivery_phone %}
+      <div style="margin-bottom:0.4rem;"><span style="color:#888;font-size:0.85rem;">{% if lang == 'en' %}Phone{% else %}Teléfono{% endif %}:</span> <strong>{{ order.delivery_phone }}</strong></div>
+      {% endif %}
+      {% if order.business_name %}
+      <div><span style="color:#888;font-size:0.85rem;">{% if lang == 'en' %}Business{% else %}Negocio{% endif %}:</span> <strong>{{ order.business_name }}</strong></div>
+      {% endif %}
+    </div>
+    {% elif order.fulfillment_type == 'pickup' %}
+    <div style="background:var(--crema);border-radius:10px;padding:1rem;margin-bottom:1.5rem;">
+      <div style="font-size:0.75rem;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:1px;margin-bottom:0.75rem;">
+        🏪 {% if lang == 'en' %}Pick Up Details{% else %}Datos de Recolección{% endif %}
+      </div>
+      {% if order.pickup_name %}
+      <div style="margin-bottom:0.4rem;"><span style="color:#888;font-size:0.85rem;">{% if lang == 'en' %}Name{% else %}Nombre{% endif %}:</span> <strong>{{ order.pickup_name }}</strong></div>
+      {% endif %}
+      {% if order.pickup_phone %}
+      <div><span style="color:#888;font-size:0.85rem;">{% if lang == 'en' %}Phone{% else %}Teléfono{% endif %}:</span> <strong>{{ order.pickup_phone }}</strong></div>
+      {% endif %}
+    </div>
+    {% endif %}
+
+    <!-- Items table -->
     <table class="receipt-table">
       <thead>
         <tr>
           <th>{% if lang == 'en' %}Product{% else %}Producto{% endif %}</th>
           <th style="text-align:center;">{% if lang == 'en' %}Qty{% else %}Cant.{% endif %}</th>
           <th style="text-align:right;">{% if lang == 'en' %}Unit Price{% else %}P. Unit.{% endif %}</th>
-          <th style="text-align:right;">{% if lang == 'en' %}Subtotal{% else %}Subtotal{% endif %}</th>
+          <th style="text-align:right;">Subtotal</th>
         </tr>
       </thead>
       <tbody>
@@ -57,7 +124,7 @@
     </table>
 
     <div class="receipt-total">
-      <span>{% if lang == 'en' %}TOTAL{% else %}TOTAL{% endif %}</span>
+      <span>TOTAL</span>
       <span>${{ order.total_amount|floatformat:1 }} MXN</span>
     </div>
 
@@ -68,22 +135,14 @@
     </div>
     {% endif %}
 
-    {% if order.payment_status == 'cash_on_delivery' %}
-    <div style="background:linear-gradient(135deg,#fffbea,#fff3cd);border:2px solid var(--amarillo);border-radius:12px;padding:1.25rem;text-align:center;margin-bottom:1.5rem;">
-      <div style="font-size:1.5rem;margin-bottom:0.4rem;">💵</div>
-      <strong style="color:var(--cafe);">{% if lang == 'en' %}Cash on Delivery{% else %}Pago en Efectivo al Entregar{% endif %}</strong>
-      <p style="font-size:0.88rem;color:#666;margin-top:0.3rem;">
-        {% if lang == 'en' %}Our delivery driver will collect ${{ order.total_amount|floatformat:1 }} MXN when your order arrives.{% else %}Nuestro repartidor cobrará ${{ order.total_amount|floatformat:1 }} MXN al entregar tu pedido.{% endif %}
-      </p>
-    </div>
-    {% endif %}
-
-    <div style="background:linear-gradient(135deg,var(--verde),#1a4a35);color:white;border-radius:12px;padding:1.25rem;text-align:center;">
+    {% if order.fulfillment_type == 'pickup' %}
+    <div style="background:linear-gradient(135deg,var(--verde),#1a4a35);color:white;border-radius:12px;padding:1.25rem;text-align:center;margin-bottom:1.5rem;">
       <div style="font-size:1.5rem;margin-bottom:0.5rem;">🏪</div>
       <strong>{% if lang == 'en' %}Pick up your order at:{% else %}Recoge tu pedido en:{% endif %}</strong>
       <p style="opacity:0.9;font-size:0.9rem;margin-top:0.4rem;">Frutería Elí — Primo Tapia, Baja California</p>
       <p style="opacity:0.8;font-size:0.85rem;">{% if lang == 'en' %}Mon – Sat: 7am – 7pm{% else %}Lun – Sáb: 7am – 7pm{% endif %} · +52 664-112-3841</p>
     </div>
+    {% endif %}
 
     <div style="text-align:center;margin-top:1.5rem;color:#ccc;font-size:0.78rem;">
       {% if lang == 'en' %}Thank you for shopping at Frutería Elí! 💚{% else %}¡Gracias por comprar en Frutería Elí! 💚{% endif %}

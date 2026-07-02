@@ -1,36 +1,90 @@
 {% extends 'base.html' %}
-{% block title %}{% if lang == 'en' %}Checkout{% else %}Pago{% endif %} — Frutería Elí{% endblock %}
+{% block title %}{% if lang == 'en' %}Checkout{% else %}Finalizar Pedido{% endif %} — Frutería Elí{% endblock %}
 
 {% block content %}
-<div class="page-container" style="max-width:1000px;">
-  <h1 class="page-header">💳 {% if lang == 'en' %}Checkout{% else %}Finalizar Pedido{% endif %}</h1>
+<div class="page-container" style="max-width:1100px;">
+  <h1 class="page-header">{% if lang == 'en' %}Checkout{% else %}Finalizar Pedido{% endif %}</h1>
 
   <div class="checkout-grid">
-    <!-- LEFT: Notes + Pickup -->
+
+    <!-- LEFT: Fulfillment type + form fields -->
     <div>
-      <div class="checkout-card">
-        <h3>📝 {% if lang == 'en' %}Order Notes{% else %}Notas del Pedido{% endif %}</h3>
-        <p style="font-size:0.9rem;color:#666;margin-bottom:1rem;">
-          {% if lang == 'en' %}Any special instructions? Preferred pickup time?{% else %}¿Instrucciones especiales? ¿Hora de recolección preferida?{% endif %}
-        </p>
-        <textarea class="notes-field" id="order-notes" rows="4"
-          placeholder="{% if lang == 'en' %}E.g. Please pick the ripest mangos 🥭{% else %}Ej. Por favor escoge los mangos más maduros 🥭{% endif %}"></textarea>
+      <!-- Tab switcher -->
+      <div style="display:flex;margin-bottom:1.5rem;border-radius:14px;overflow:hidden;border:2px solid var(--verde);">
+        <button type="button" id="tab-delivery" onclick="switchTab('delivery')"
+          style="flex:1;padding:0.85rem;font-family:'Nunito',sans-serif;font-weight:700;font-size:1rem;border:none;cursor:pointer;transition:all 0.2s;background:var(--verde);color:white;">
+          🚚 {% if lang == 'en' %}Delivery{% else %}Entrega{% endif %}
+        </button>
+        <button type="button" id="tab-pickup" onclick="switchTab('pickup')"
+          style="flex:1;padding:0.85rem;font-family:'Nunito',sans-serif;font-weight:700;font-size:1rem;border:none;cursor:pointer;transition:all 0.2s;background:transparent;color:var(--verde);">
+          🏪 {% if lang == 'en' %}Pick Up{% else %}Recoger{% endif %}
+        </button>
       </div>
 
-      <div class="checkout-card" style="margin-top:1.5rem;">
-        <h3>🏪 {% if lang == 'en' %}Pickup Information{% else %}Información de Recogida{% endif %}</h3>
-        <div style="display:flex;align-items:flex-start;gap:1rem;margin-top:0.5rem;">
-          <span style="font-size:2rem;">📍</span>
-          <div>
-            <strong>Frutería Elí</strong><br>
-            <span style="color:#666;font-size:0.9rem;">Primo Tapia, Baja California, México</span><br>
-            <span style="color:var(--verde);font-size:0.9rem;font-weight:700;">{% if lang == 'en' %}Mon – Sat: 7am – 7pm{% else %}Lun – Sáb: 7am – 7pm{% endif %}</span>
-          </div>
+      <!-- Delivery fields -->
+      <div id="delivery-section" class="checkout-card">
+        <h3>🚚 {% if lang == 'en' %}Delivery Information{% else %}Información de Entrega{% endif %}</h3>
+
+        <div class="form-group">
+          <label class="form-label">📍 {% if lang == 'en' %}Address *{% else %}Dirección *{% endif %}</label>
+          <input type="text" id="delivery-address" class="form-input"
+            placeholder="{% if lang == 'en' %}Street, neighborhood, city{% else %}Calle, colonia, ciudad{% endif %}">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">📱 {% if lang == 'en' %}Phone Number *{% else %}Teléfono *{% endif %}</label>
+          <input type="tel" id="delivery-phone" class="form-input" placeholder="664-000-0000">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">🏢 {% if lang == 'en' %}Business Name (optional){% else %}Nombre del negocio (opcional){% endif %}</label>
+          <input type="text" id="delivery-business" class="form-input"
+            placeholder="{% if lang == 'en' %}e.g. Tacos El Güero{% else %}Ej. Tacos El Güero{% endif %}">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">🕐 {% if lang == 'en' %}Delivery Time *{% else %}Horario de Entrega *{% endif %}</label>
+          <select id="delivery-time" class="form-input">
+            {% for slot in delivery_slots %}
+            <option value="{{ slot.value }}">{{ slot.label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+
+      <!-- Pickup fields -->
+      <div id="pickup-section" class="checkout-card" style="display:none;">
+        <h3>🏪 {% if lang == 'en' %}Pick Up Information{% else %}Información de Recolección{% endif %}</h3>
+
+        <div class="form-group">
+          <label class="form-label">👤 {% if lang == 'en' %}Name *{% else %}Nombre *{% endif %}</label>
+          <input type="text" id="pickup-name" class="form-input"
+            placeholder="{% if lang == 'en' %}Full name{% else %}Nombre completo{% endif %}">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">📱 {% if lang == 'en' %}Phone Number *{% else %}Teléfono *{% endif %}</label>
+          <input type="tel" id="pickup-phone" class="form-input" placeholder="664-000-0000">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">🕐 {% if lang == 'en' %}Pick Up Time *{% else %}Hora de Recolección *{% endif %}</label>
+          <select id="pickup-time" class="form-input">
+            {% for slot in pickup_slots %}
+            <option value="{{ slot.value }}">{{ slot.label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div style="background:linear-gradient(135deg,var(--verde),#1a4a35);color:white;border-radius:10px;padding:1rem;text-align:center;">
+          <strong>📍 Frutería Elí</strong><br>
+          <span style="opacity:0.9;font-size:0.9rem;">Primo Tapia, Baja California, México</span><br>
+          <span style="opacity:0.8;font-size:0.85rem;">{% if lang == 'en' %}Mon – Sat: 7am – 7pm{% else %}Lun – Sáb: 7am – 7pm{% endif %}</span>
         </div>
       </div>
     </div>
 
-    <!-- RIGHT: Summary + Payment -->
+    <!-- RIGHT: Summary + Place Order -->
     <div>
       <div class="checkout-card">
         <h3>🧾 {% if lang == 'en' %}Order Summary{% else %}Resumen del Pedido{% endif %}</h3>
@@ -48,149 +102,104 @@
         </div>
       </div>
 
-      <!-- Payment Method -->
       <div class="checkout-card" style="margin-top:1.5rem;">
-        <h3>💳 {% if lang == 'en' %}Payment Method{% else %}Método de Pago{% endif %}</h3>
-
-        <div style="display:flex;gap:0.75rem;margin-bottom:1.25rem;">
-          <button type="button" id="pay-card-tab"
-            onclick="selectPayment('card')"
-            style="flex:1;padding:0.65rem;border-radius:12px;border:2px solid var(--verde);background:var(--verde);color:white;font-family:'Nunito',sans-serif;font-weight:700;font-size:0.95rem;cursor:pointer;transition:all 0.2s;">
-            💳 {% if lang == 'en' %}Card{% else %}Tarjeta{% endif %}
-          </button>
-          <button type="button" id="pay-cash-tab"
-            onclick="selectPayment('cash')"
-            style="flex:1;padding:0.65rem;border-radius:12px;border:2px solid var(--verde);background:transparent;color:var(--verde);font-family:'Nunito',sans-serif;font-weight:700;font-size:0.95rem;cursor:pointer;transition:all 0.2s;">
-            💵 {% if lang == 'en' %}Cash{% else %}Efectivo{% endif %}
-          </button>
+        <div style="background:linear-gradient(135deg,#fffbea,#fff3cd);border:2px solid var(--amarillo);border-radius:12px;padding:1.25rem;text-align:center;margin-bottom:1.25rem;">
+          <div style="font-size:2rem;margin-bottom:0.5rem;">💵</div>
+          <strong style="color:var(--cafe);font-size:1rem;">
+            {% if lang == 'en' %}Cash on Delivery / Pick Up{% else %}Pago en Efectivo{% endif %}
+          </strong>
+          <p style="font-size:0.88rem;color:#666;margin-top:0.4rem;">
+            {% if lang == 'en' %}Pay ${{ cart.get_total|floatformat:1 }} MXN in cash when your order arrives or at pick up.{% else %}Paga ${{ cart.get_total|floatformat:1 }} MXN en efectivo al recibir o recoger tu pedido.{% endif %}
+          </p>
         </div>
 
-        <!-- Card section -->
-        <div id="card-payment-section">
-          <div class="mp-banner">
-            <strong>💳 {% if lang == 'en' %}Secure card payment (Stripe){% else %}Pago con tarjeta seguro (Stripe){% endif %}</strong>
-            <span>{% if lang == 'en' %}Your card details are encrypted{% else %}Tus datos de tarjeta están cifrados{% endif %}</span>
-          </div>
-          <div id="card-element" style="padding:12px;border:1px solid #e6e6e6;border-radius:6px;margin-top:1rem;"></div>
-          <div id="card-errors" role="alert" style="color:red;margin-top:0.5rem;"></div>
-          <button id="stripe-pay-button" type="button" class="btn-primary" style="width:100%;justify-content:center;font-size:1.1rem;padding:1rem;margin-top:0.75rem;">
-            {% if lang == 'en' %}Pay with Card — ${{ cart.get_total|floatformat:1 }} MXN{% else %}Pagar con tarjeta — ${{ cart.get_total|floatformat:1 }} MXN{% endif %}
-          </button>
-        </div>
+        <form method="post" action="{% url 'place_order' %}" id="order-form">
+          {% csrf_token %}
+          <input type="hidden" name="fulfillment_type" id="fulfillment-type-hidden" value="delivery">
+          <input type="hidden" name="delivery_address" id="delivery-address-hidden">
+          <input type="hidden" name="delivery_phone" id="delivery-phone-hidden">
+          <input type="hidden" name="business_name" id="business-name-hidden">
+          <input type="hidden" name="pickup_name" id="pickup-name-hidden">
+          <input type="hidden" name="pickup_phone" id="pickup-phone-hidden">
+          <input type="hidden" name="scheduled_time" id="scheduled-time-hidden">
 
-        <!-- Cash section -->
-        <div id="cash-payment-section" style="display:none;">
-          <div style="background:linear-gradient(135deg,#fffbea,#fff3cd);border:2px solid var(--amarillo);border-radius:12px;padding:1.25rem;text-align:center;margin-bottom:1rem;">
-            <div style="font-size:2rem;margin-bottom:0.5rem;">🚚💵</div>
-            <strong style="color:var(--cafe);font-size:1rem;">
-              {% if lang == 'en' %}Cash on Delivery{% else %}Pago en Efectivo al Entregar{% endif %}
-            </strong>
-            <p style="font-size:0.88rem;color:#666;margin-top:0.4rem;">
-              {% if lang == 'en' %}Our delivery driver will collect ${{ cart.get_total|floatformat:1 }} MXN in cash when your order arrives.{% else %}Nuestro repartidor cobrará ${{ cart.get_total|floatformat:1 }} MXN en efectivo al entregar tu pedido.{% endif %}
-            </p>
-          </div>
-          <button id="cash-pay-button" type="button" class="btn-primary" style="width:100%;justify-content:center;font-size:1.1rem;padding:1rem;background:var(--naranja);">
-            {% if lang == 'en' %}✅ Confirm Order — Pay Cash on Delivery{% else %}✅ Confirmar Pedido — Pagar en Efectivo{% endif %}
+          <button type="submit" class="btn-primary"
+            style="width:100%;justify-content:center;font-size:1.1rem;padding:1rem;"
+            onclick="return prepareOrder()">
+            ✅ {% if lang == 'en' %}Place Order{% else %}Realizar Pedido{% endif %}
           </button>
-        </div>
+        </form>
+
+        <p style="font-size:0.78rem;color:#999;text-align:center;margin-top:0.75rem;">
+          🔒 {% if lang == 'en' %}Your information is handled securely{% else %}Tu información se maneja de forma segura{% endif %}
+        </p>
       </div>
-
-      <!-- Hidden order form -->
-      <form method="post" action="{% url 'place_order' %}" id="order-form">
-        {% csrf_token %}
-        <input type="hidden" name="notes" id="notes-hidden">
-        <input type="hidden" name="payment_id" id="payment-id-hidden" value="">
-        <input type="hidden" name="payment_method" id="payment-method-hidden" value="card">
-      </form>
-
-      <p style="font-size:0.78rem;color:#999;text-align:center;margin-top:0.75rem;">
-        🔒 {% if lang == 'en' %}Your information is handled securely{% else %}Tu información se maneja de forma segura{% endif %}
-      </p>
     </div>
+
   </div>
 </div>
 {% endblock %}
 
 {% block extra_js %}
-<script src="https://js.stripe.com/v3/"></script>
-
 <script>
-function selectPayment(method) {
-  document.getElementById('payment-method-hidden').value = method;
-  const cardSection = document.getElementById('card-payment-section');
-  const cashSection = document.getElementById('cash-payment-section');
-  const cardTab = document.getElementById('pay-card-tab');
-  const cashTab = document.getElementById('pay-cash-tab');
-  if (method === 'cash') {
-    cardSection.style.display = 'none';
-    cashSection.style.display = 'block';
-    cashTab.style.background = 'var(--naranja)';
-    cashTab.style.color = 'white';
-    cashTab.style.borderColor = 'var(--naranja)';
-    cardTab.style.background = 'transparent';
-    cardTab.style.color = 'var(--verde)';
-    cardTab.style.borderColor = 'var(--verde)';
+var activeTab = 'delivery';
+
+function switchTab(tab) {
+  activeTab = tab;
+  document.getElementById('fulfillment-type-hidden').value = tab;
+  var ds = document.getElementById('delivery-section');
+  var ps = document.getElementById('pickup-section');
+  var dt = document.getElementById('tab-delivery');
+  var pt = document.getElementById('tab-pickup');
+  if (tab === 'delivery') {
+    ds.style.display = 'block';
+    ps.style.display = 'none';
+    dt.style.background = 'var(--verde)';
+    dt.style.color = 'white';
+    pt.style.background = 'transparent';
+    pt.style.color = 'var(--verde)';
   } else {
-    cardSection.style.display = 'block';
-    cashSection.style.display = 'none';
-    cardTab.style.background = 'var(--verde)';
-    cardTab.style.color = 'white';
-    cardTab.style.borderColor = 'var(--verde)';
-    cashTab.style.background = 'transparent';
-    cashTab.style.color = 'var(--verde)';
-    cashTab.style.borderColor = 'var(--verde)';
+    ds.style.display = 'none';
+    ps.style.display = 'block';
+    pt.style.background = 'var(--verde)';
+    pt.style.color = 'white';
+    dt.style.background = 'transparent';
+    dt.style.color = 'var(--verde)';
   }
 }
 
-document.getElementById('cash-pay-button').addEventListener('click', function() {
-  document.getElementById('notes-hidden').value = document.getElementById('order-notes').value;
-  document.getElementById('payment-id-hidden').value = '';
-  document.getElementById('order-form').submit();
-});
-
-try {
-  const stripe = Stripe('{{ stripe_public_key }}');
-  const elements = stripe.elements();
-  const card = elements.create('card', { hidePostalCode: true });
-  card.mount('#card-element');
-
-  card.on('change', function(event) {
-    document.getElementById('card-errors').textContent = event.error ? event.error.message : '';
-  });
-
-  document.getElementById('stripe-pay-button').addEventListener('click', async function() {
-    document.getElementById('notes-hidden').value = document.getElementById('order-notes').value;
-
-    const resp = await fetch("{% url 'create_payment_intent' %}", {
-      method: 'POST',
-      headers: {
-        'X-CSRFToken': '{{ csrf_token }}',
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({})
-    });
-
-    const data = await resp.json();
-    if (data.error) {
-      document.getElementById('card-errors').textContent = data.error;
-      return;
+function prepareOrder() {
+  if (activeTab === 'delivery') {
+    var addr = document.getElementById('delivery-address').value.trim();
+    var phone = document.getElementById('delivery-phone').value.trim();
+    if (!addr) {
+      alert("{% if lang == 'en' %}Please enter your delivery address.{% else %}Por favor ingresa tu dirección de entrega.{% endif %}");
+      return false;
     }
-
-    const result = await stripe.confirmCardPayment(data.client_secret, {
-      payment_method: { card: card }
-    });
-
-    if (result.error) {
-      document.getElementById('card-errors').textContent = result.error.message || 'Payment failed';
-    } else if (result.paymentIntent && result.paymentIntent.status === 'succeeded') {
-      document.getElementById('payment-id-hidden').value = result.paymentIntent.id;
-      document.getElementById('order-form').submit();
-    } else {
-      document.getElementById('card-errors').textContent = 'Payment not completed';
+    if (!phone) {
+      alert("{% if lang == 'en' %}Please enter your phone number.{% else %}Por favor ingresa tu número de teléfono.{% endif %}");
+      return false;
     }
-  });
-} catch (e) {
-  console.log('Stripe not configured or error initializing:', e);
+    document.getElementById('delivery-address-hidden').value = addr;
+    document.getElementById('delivery-phone-hidden').value = phone;
+    document.getElementById('business-name-hidden').value = document.getElementById('delivery-business').value.trim();
+    document.getElementById('scheduled-time-hidden').value = document.getElementById('delivery-time').value;
+  } else {
+    var name = document.getElementById('pickup-name').value.trim();
+    var phone2 = document.getElementById('pickup-phone').value.trim();
+    if (!name) {
+      alert("{% if lang == 'en' %}Please enter your name.{% else %}Por favor ingresa tu nombre.{% endif %}");
+      return false;
+    }
+    if (!phone2) {
+      alert("{% if lang == 'en' %}Please enter your phone number.{% else %}Por favor ingresa tu número de teléfono.{% endif %}");
+      return false;
+    }
+    document.getElementById('pickup-name-hidden').value = name;
+    document.getElementById('pickup-phone-hidden').value = phone2;
+    document.getElementById('scheduled-time-hidden').value = document.getElementById('pickup-time').value;
+  }
+  return true;
 }
 </script>
 {% endblock %}

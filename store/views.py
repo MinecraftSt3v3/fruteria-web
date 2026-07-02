@@ -1,13 +1,10 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from django.http import JsonResponse, HttpResponse
-from django.conf import settings
+from django.http import JsonResponse
 from django.utils import timezone
-from django.template.loader import render_to_string
-import json
-import stripe
-from django.views.decorators.csrf import csrf_exempt
+import datetime
+import zoneinfo
 from .models import Product, Category, Cart, CartItem, Order, OrderItem
 
 def get_lang(request):
@@ -95,35 +92,46 @@ def update_cart(request, item_id):
         pass
     return redirect('cart')
 
+def _fmt_time(dt):
+    h = dt.hour % 12 or 12
+    m = dt.strftime('%M')
+    ap = 'AM' if dt.hour < 12 else 'PM'
+    return f"{h}:{m} {ap}"
+
+def _make_slots(now_local, asap_delta, hours_ahead, label_asap):
+    asap = now_local + asap_delta
+    slots = [{'value': asap.isoformat(), 'label': f"{label_asap} — {_fmt_time(asap)}"}]
+    next_hour = asap.replace(minute=0, second=0, microsecond=0) + datetime.timedelta(hours=1)
+    end_time = now_local + datetime.timedelta(hours=hours_ahead)
+    cur = next_hour
+    while cur <= end_time:
+        slots.append({'value': cur.isoformat(), 'label': _fmt_time(cur)})
+        cur += datetime.timedelta(hours=1)
+    return slots
+
 @login_required
 def checkout(request):
     lang = get_lang(request)
     cart_obj, _ = Cart.objects.get_or_create(user=request.user)
     if not cart_obj.items.exists():
         return redirect('cart')
-    stripe_public_key = settings.STRIPE_PUBLIC_KEY
+
+    tz_mx = zoneinfo.ZoneInfo('America/Mexico_City')
+    now_local = timezone.now().astimezone(tz_mx)
+
+    if lang == 'en':
+        delivery_slots = _make_slots(now_local, datetime.timedelta(hours=1), 8, 'ASAP (~1 hour)')
+        pickup_slots = _make_slots(now_local, datetime.timedelta(minutes=30), 6, 'ASAP (~30 min)')
+    else:
+        delivery_slots = _make_slots(now_local, datetime.timedelta(hours=1), 8, 'Lo antes posible (~1 hora)')
+        pickup_slots = _make_slots(now_local, datetime.timedelta(minutes=30), 6, 'Lo antes posible (~30 min)')
+
     return render(request, 'store/checkout.html', {
         'cart': cart_obj,
         'lang': lang,
-        'stripe_public_key': stripe_public_key,
+        'delivery_slots': delivery_slots,
+        'pickup_slots': pickup_slots,
     })
-
-@login_required
-def create_payment_intent(request):
-    if request.method != 'POST':
-        return JsonResponse({'error': 'POST required'}, status=400)
-    cart_obj, _ = Cart.objects.get_or_create(user=request.user)
-    if not cart_obj.items.exists():
-        return JsonResponse({'error': 'cart empty'}, status=400)
-    # amount in cents
-    amount = int(cart_obj.get_total() * 100)
-    stripe.api_key = settings.STRIPE_SECRET_KEY
-    intent = stripe.PaymentIntent.create(
-        amount=amount,
-        currency='mxn',
-        metadata={'user_id': request.user.id}
-    )
-    return JsonResponse({'client_secret': intent.client_secret, 'payment_intent_id': intent.id})
 
 @login_required
 def place_order(request):
@@ -133,22 +141,33 @@ def place_order(request):
     if not cart_obj.items.exists():
         return redirect('cart')
 
-    payment_id = request.POST.get('payment_id', '')
-    payment_method = request.POST.get('payment_method', 'card')
-    notes = request.POST.get('notes', '')
+    fulfillment_type = request.POST.get('fulfillment_type', 'delivery')
+    delivery_address = request.POST.get('delivery_address', '')
+    delivery_phone = request.POST.get('delivery_phone', '')
+    business_name = request.POST.get('business_name', '')
+    pickup_name = request.POST.get('pickup_name', '')
+    pickup_phone = request.POST.get('pickup_phone', '')
+    scheduled_time_str = request.POST.get('scheduled_time', '')
 
-    if payment_method == 'cash':
-        payment_id = 'CASH'
-        payment_status = 'cash_on_delivery'
-    else:
-        payment_status = 'approved' if payment_id else 'pending'
+    scheduled_time = None
+    if scheduled_time_str:
+        try:
+            scheduled_time = datetime.datetime.fromisoformat(scheduled_time_str)
+        except ValueError:
+            pass
 
     order = Order.objects.create(
         user=request.user,
         total_amount=cart_obj.get_total(),
-        payment_id=payment_id,
-        payment_status=payment_status,
-        notes=notes,
+        payment_id='CASH',
+        payment_status='cash_on_delivery',
+        fulfillment_type=fulfillment_type,
+        delivery_address=delivery_address,
+        delivery_phone=delivery_phone,
+        business_name=business_name,
+        pickup_name=pickup_name,
+        pickup_phone=pickup_phone,
+        scheduled_time=scheduled_time,
     )
     for item in cart_obj.items.all():
         OrderItem.objects.create(

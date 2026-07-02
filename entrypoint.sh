@@ -1,5 +1,6 @@
 #!/bin/sh
 mkdir -p /home
+mkdir -p "${MEDIA_ROOT:-/home/media}"
 python manage.py migrate --no-input
 
 python manage.py shell -c "

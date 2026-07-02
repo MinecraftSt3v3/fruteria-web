@@ -1,4 +1,5 @@
 #!/bin/sh
+mkdir -p /home
 python manage.py migrate --no-input
 
 python manage.py shell -c "

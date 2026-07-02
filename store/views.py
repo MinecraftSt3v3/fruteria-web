@@ -3,6 +3,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.http import JsonResponse
 from django.utils import timezone
+from django.views.decorators.http import require_POST
 import datetime
 import zoneinfo
 from .models import Product, Category, Cart, CartItem, Order, OrderItem
@@ -193,3 +194,35 @@ def my_orders(request):
     lang = get_lang(request)
     orders = Order.objects.filter(user=request.user).order_by('-created_at')
     return render(request, 'store/my_orders.html', {'orders': orders, 'lang': lang})
+
+ACTIVE_STATUSES = ['pending', 'confirmed', 'preparing', 'ready']
+COMPLETED_STATUSES = ['delivered', 'cancelled']
+
+@login_required
+def order_dashboard(request):
+    if not request.user.is_staff:
+        return redirect('home')
+    tz_mx = zoneinfo.ZoneInfo('America/Mexico_City')
+    now_mx = timezone.now().astimezone(tz_mx)
+    active_orders = Order.objects.filter(status__in=ACTIVE_STATUSES).order_by('-created_at').prefetch_related('items__product')
+    completed_orders = Order.objects.filter(status__in=COMPLETED_STATUSES).order_by('-created_at').prefetch_related('items__product')[:20]
+    return render(request, 'store/dashboard.html', {
+        'active_orders': active_orders,
+        'completed_orders': completed_orders,
+        'now_mx': now_mx,
+    })
+
+@login_required
+@require_POST
+def update_order_status(request):
+    if not request.user.is_staff:
+        return JsonResponse({'success': False, 'error': 'Forbidden'}, status=403)
+    order_id = request.POST.get('order_id')
+    new_status = request.POST.get('status')
+    valid_statuses = [s[0] for s in Order.STATUS_CHOICES]
+    if new_status not in valid_statuses:
+        return JsonResponse({'success': False, 'error': 'Invalid status'}, status=400)
+    order = get_object_or_404(Order, id=order_id)
+    order.status = new_status
+    order.save()
+    return JsonResponse({'success': True})

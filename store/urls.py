@@ -14,4 +14,6 @@ urlpatterns = [
     path('orders/', views.my_orders, name='my_orders'),
     path('orders/<int:order_id>/receipt/', views.order_receipt, name='order_receipt'),
     path('set-language/', views.set_language, name='set_language'),
+    path('dashboard/', views.order_dashboard, name='order_dashboard'),
+    path('dashboard/update-status/', views.update_order_status, name='update_order_status'),
 ]

@@ -45,6 +45,9 @@
         </a>
       </li>
       <li><a href="{% url 'my_orders' %}">{% if lang == 'en' %}📋 My Orders{% else %}📋 Mis Pedidos{% endif %}</a></li>
+      {% if user.is_staff %}
+      <li><a href="{% url 'order_dashboard' %}" style="background:var(--amarillo);color:var(--verde);">🗂️ Dashboard</a></li>
+      {% endif %}
       <li><a href="{% url 'logout' %}">{% if lang == 'en' %}👋 Logout{% else %}👋 Salir{% endif %}</a></li>
     {% else %}
       <li><a href="{% url 'login' %}">{% if lang == 'en' %}🔑 Login{% else %}🔑 Ingresar{% endif %}</a></li>

@@ -1,0 +1,550 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Panel de Pedidos — Frutería Elí{% endblock %}
+
+{% block extra_head %}
+<style>
+/* ── DASHBOARD LAYOUT ── */
+.dashboard-wrap {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 1.5rem;
+}
+
+.dashboard-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 2rem;
+  padding-bottom: 1rem;
+  border-bottom: 3px solid var(--amarillo);
+}
+
+.dashboard-title {
+  font-family: 'Fraunces', serif;
+  font-size: 2rem;
+  font-weight: 900;
+  color: var(--verde);
+  margin: 0;
+}
+
+.dashboard-meta {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.refresh-badge {
+  background: var(--verde);
+  color: white;
+  padding: 0.4rem 1rem;
+  border-radius: 20px;
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.clock-badge {
+  background: var(--naranja);
+  color: white;
+  padding: 0.4rem 1rem;
+  border-radius: 20px;
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+/* ── SECTION HEADINGS ── */
+.dash-section-title {
+  font-family: 'Fraunces', serif;
+  font-size: 1.4rem;
+  font-weight: 900;
+  color: var(--cafe);
+  margin: 2rem 0 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.dash-section-title .count-pill {
+  background: var(--rojo);
+  color: white;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 800;
+  padding: 0.15rem 0.6rem;
+  font-family: 'Nunito', sans-serif;
+}
+
+/* ── ORDER CARDS ── */
+.orders-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  gap: 1.25rem;
+}
+
+.dash-card {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 4px 18px var(--sombra);
+  overflow: hidden;
+  border-top: 5px solid var(--verde);
+  position: relative;
+}
+
+.dash-card.fulfillment-delivery { border-top-color: var(--naranja); }
+.dash-card.fulfillment-pickup   { border-top-color: var(--morado); }
+
+.card-head {
+  padding: 1rem 1.2rem 0.75rem;
+  border-bottom: 1px dashed #e8e8e8;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.card-order-num {
+  font-family: 'Fraunces', serif;
+  font-size: 1.15rem;
+  font-weight: 900;
+  color: var(--verde);
+}
+
+.card-times {
+  font-size: 0.78rem;
+  color: #888;
+  margin-top: 0.2rem;
+}
+
+.card-times strong { color: var(--cafe); }
+
+.fulfillment-badge {
+  padding: 0.3rem 0.8rem;
+  border-radius: 20px;
+  font-size: 0.78rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.badge-delivery { background: #fff3e0; color: #e65100; }
+.badge-pickup   { background: #f3e5f5; color: #6a1b9a; }
+
+.card-body { padding: 1rem 1.2rem; }
+
+.info-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  font-size: 0.88rem;
+  margin-bottom: 0.5rem;
+  color: var(--texto);
+}
+
+.info-row .info-icon { font-size: 1rem; flex-shrink: 0; }
+
+.scheduled-row {
+  background: var(--crema);
+  border-radius: 8px;
+  padding: 0.4rem 0.75rem;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--cafe);
+  margin-bottom: 0.75rem;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.items-list {
+  list-style: none;
+  border: 1px solid #f0f0f0;
+  border-radius: 10px;
+  overflow: hidden;
+  margin-bottom: 0.75rem;
+}
+
+.items-list li {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.45rem 0.8rem;
+  font-size: 0.87rem;
+  border-bottom: 1px solid #f5f5f5;
+}
+
+.items-list li:last-child { border-bottom: none; }
+.items-list li:nth-child(even) { background: #fafafa; }
+
+.item-name { font-weight: 700; color: var(--cafe); }
+.item-qty  { color: var(--verde); font-weight: 800; white-space: nowrap; }
+
+.card-total {
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: var(--rojo);
+  text-align: right;
+  margin-bottom: 0.75rem;
+}
+
+.card-notes {
+  background: #fffbf0;
+  border-left: 3px solid var(--amarillo);
+  padding: 0.5rem 0.75rem;
+  font-size: 0.82rem;
+  color: #555;
+  border-radius: 0 6px 6px 0;
+  margin-bottom: 0.75rem;
+}
+
+/* ── STATUS CONTROLS ── */
+.card-foot {
+  padding: 0.85rem 1.2rem;
+  background: #f9f9f9;
+  border-top: 1px solid #eeeeee;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.status-actions { display: flex; gap: 0.4rem; flex-wrap: wrap; }
+
+.btn-status {
+  border: none;
+  padding: 0.4rem 0.9rem;
+  border-radius: 20px;
+  font-weight: 800;
+  font-family: 'Nunito', sans-serif;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.18s;
+}
+
+.btn-confirm  { background: #d1e7dd; color: #0f5132; }
+.btn-confirm:hover  { background: #0f5132; color: white; }
+.btn-prepare  { background: #cfe2ff; color: #084298; }
+.btn-prepare:hover  { background: #084298; color: white; }
+.btn-ready    { background: #fff3cd; color: #856404; }
+.btn-ready:hover    { background: #856404; color: white; }
+.btn-deliver  { background: #d1e7dd; color: #0f5132; }
+.btn-deliver:hover  { background: #0f5132; color: white; }
+.btn-cancel   { background: #f8d7da; color: #842029; }
+.btn-cancel:hover   { background: #842029; color: white; }
+
+.btn-print {
+  background: var(--cafe);
+  color: white;
+  border: none;
+  padding: 0.4rem 0.9rem;
+  border-radius: 20px;
+  font-weight: 800;
+  font-family: 'Nunito', sans-serif;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.18s;
+  white-space: nowrap;
+}
+
+.btn-print:hover { background: #3d2015; }
+
+/* ── COMPLETED TABLE ── */
+.completed-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 0 4px 18px var(--sombra);
+  font-size: 0.88rem;
+}
+
+.completed-table th {
+  background: var(--cafe);
+  color: white;
+  padding: 0.75rem 1rem;
+  text-align: left;
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.completed-table td {
+  padding: 0.65rem 1rem;
+  border-bottom: 1px solid #f0f0f0;
+  vertical-align: middle;
+}
+
+.completed-table tr:last-child td { border-bottom: none; }
+.completed-table tr:nth-child(even) td { background: #fafafa; }
+
+/* ── PRINT STYLES ── */
+@media print {
+  /* hide everything by default */
+  body * { visibility: hidden !important; }
+
+  /* show only the targeted card */
+  .dash-card.printing,
+  .dash-card.printing * { visibility: visible !important; }
+
+  .dash-card.printing {
+    position: fixed !important;
+    inset: 0 !important;
+    width: 100% !important;
+    max-width: none !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    border-top: none !important;
+    padding: 2rem !important;
+    background: white !important;
+  }
+
+  /* hide print & status buttons inside the printed card */
+  .dash-card.printing .card-foot { display: none !important; }
+
+  .dash-card.printing .card-order-num {
+    font-size: 1.5rem !important;
+  }
+
+  /* receipt header */
+  .dash-card.printing::before {
+    content: 'Frutería Elí — Recibo de Pedido';
+    display: block;
+    font-family: serif;
+    font-size: 1.2rem;
+    font-weight: bold;
+    text-align: center;
+    padding-bottom: 0.75rem;
+    margin-bottom: 0.75rem;
+    border-bottom: 2px solid #333;
+    visibility: visible !important;
+  }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-wrap">
+
+  <!-- HEADER -->
+  <div class="dashboard-header">
+    <h1 class="dashboard-title">📋 Panel de Pedidos</h1>
+    <div class="dashboard-meta">
+      <span class="clock-badge" id="clock-display">
+        🕐 {{ now_mx|date:"H:i" }} (CDMX)
+      </span>
+      <span class="refresh-badge" id="refresh-badge">
+        ↻ Actualizado hace <span id="seconds-ago">0</span> seg
+      </span>
+    </div>
+  </div>
+
+  <!-- ACTIVE ORDERS -->
+  <div class="dash-section-title">
+    Pedidos Activos
+    <span class="count-pill">{{ active_orders|length }}</span>
+  </div>
+
+  {% if active_orders %}
+  <div class="orders-grid" id="active-orders-grid">
+    {% for order in active_orders %}
+    <div class="dash-card fulfillment-{{ order.fulfillment_type }}" id="card-{{ order.id }}">
+
+      <!-- HEAD -->
+      <div class="card-head">
+        <div>
+          <div class="card-order-num">{{ order.order_number }}</div>
+          <div class="card-times">
+            <strong>{{ order.created_at|date:"H:i" }}</strong>
+            &nbsp;·&nbsp;
+            hace {{ order.created_at|timesince:now_mx }}
+          </div>
+        </div>
+        {% if order.fulfillment_type == 'delivery' %}
+          <span class="fulfillment-badge badge-delivery">🚚 Entrega</span>
+        {% else %}
+          <span class="fulfillment-badge badge-pickup">🏪 Recoger</span>
+        {% endif %}
+      </div>
+
+      <!-- BODY -->
+      <div class="card-body">
+
+        <!-- Scheduled time -->
+        {% if order.scheduled_time %}
+        <div class="scheduled-row">
+          ⏰ Para: {{ order.scheduled_time|date:"D d/m H:i" }}
+        </div>
+        {% endif %}
+
+        <!-- Customer info -->
+        {% if order.fulfillment_type == 'delivery' %}
+          {% if order.business_name %}
+          <div class="info-row"><span class="info-icon">🏢</span> {{ order.business_name }}</div>
+          {% endif %}
+          {% if order.delivery_address %}
+          <div class="info-row"><span class="info-icon">📍</span> {{ order.delivery_address }}</div>
+          {% endif %}
+          {% if order.delivery_phone %}
+          <div class="info-row"><span class="info-icon">📞</span> {{ order.delivery_phone }}</div>
+          {% endif %}
+        {% else %}
+          {% if order.pickup_name %}
+          <div class="info-row"><span class="info-icon">👤</span> {{ order.pickup_name }}</div>
+          {% endif %}
+          {% if order.pickup_phone %}
+          <div class="info-row"><span class="info-icon">📞</span> {{ order.pickup_phone }}</div>
+          {% endif %}
+        {% endif %}
+
+        <!-- Items -->
+        <ul class="items-list">
+          {% for item in order.items.all %}
+          <li>
+            <span class="item-name">{{ item.product_name_es }}</span>
+            <span class="item-qty">{{ item.quantity }} {{ item.unit }}</span>
+          </li>
+          {% endfor %}
+        </ul>
+
+        <!-- Total -->
+        <div class="card-total">Total: ${{ order.total_amount }}</div>
+
+        <!-- Notes -->
+        {% if order.notes %}
+        <div class="card-notes">📝 {{ order.notes }}</div>
+        {% endif %}
+
+        <!-- Status badge -->
+        <span class="status-badge status-{{ order.status }}">
+          {% if order.status == 'pending' %}⏳ Pendiente
+          {% elif order.status == 'confirmed' %}✅ Confirmado
+          {% elif order.status == 'preparing' %}🔪 Preparando
+          {% elif order.status == 'ready' %}📦 Listo
+          {% else %}{{ order.get_status_display }}{% endif %}
+        </span>
+
+      </div><!-- /card-body -->
+
+      <!-- FOOT -->
+      <div class="card-foot">
+        <div class="status-actions">
+          {% if order.status == 'pending' %}
+            <button class="btn-status btn-confirm" onclick="updateStatus({{ order.id }}, 'confirmed')">✅ Confirmar</button>
+            <button class="btn-status btn-cancel"  onclick="updateStatus({{ order.id }}, 'cancelled')">✖ Cancelar</button>
+          {% elif order.status == 'confirmed' %}
+            <button class="btn-status btn-prepare" onclick="updateStatus({{ order.id }}, 'preparing')">🔪 Preparando</button>
+            <button class="btn-status btn-cancel"  onclick="updateStatus({{ order.id }}, 'cancelled')">✖ Cancelar</button>
+          {% elif order.status == 'preparing' %}
+            <button class="btn-status btn-ready"   onclick="updateStatus({{ order.id }}, 'ready')">📦 Listo</button>
+          {% elif order.status == 'ready' %}
+            <button class="btn-status btn-deliver" onclick="updateStatus({{ order.id }}, 'delivered')">🚚 Entregado</button>
+          {% endif %}
+        </div>
+        <button class="btn-print" onclick="printCard({{ order.id }})">🖨️ Imprimir</button>
+      </div>
+
+    </div><!-- /dash-card -->
+    {% endfor %}
+  </div><!-- /orders-grid -->
+
+  {% else %}
+  <div class="empty-state">
+    <div class="empty-emoji">🎉</div>
+    <h3>Sin pedidos activos</h3>
+    <p>Todo al día por el momento.</p>
+  </div>
+  {% endif %}
+
+  <!-- COMPLETED ORDERS -->
+  <div class="dash-section-title" style="margin-top:3rem;">
+    Pedidos Completados
+    <span class="count-pill" style="background:var(--cafe);">{{ completed_orders|length }}</span>
+  </div>
+
+  {% if completed_orders %}
+  <div style="overflow-x:auto;">
+    <table class="completed-table">
+      <thead>
+        <tr>
+          <th>Pedido</th>
+          <th>Hora</th>
+          <th>Tipo</th>
+          <th>Cliente</th>
+          <th>Total</th>
+          <th>Estado</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for order in completed_orders %}
+        <tr>
+          <td><strong>{{ order.order_number }}</strong></td>
+          <td>{{ order.created_at|date:"d/m H:i" }}</td>
+          <td>
+            {% if order.fulfillment_type == 'delivery' %}🚚 Entrega{% else %}🏪 Recoger{% endif %}
+          </td>
+          <td>
+            {% if order.fulfillment_type == 'delivery' %}
+              {{ order.delivery_address|truncatechars:30 }}
+            {% else %}
+              {{ order.pickup_name }}
+            {% endif %}
+          </td>
+          <td>${{ order.total_amount }}</td>
+          <td><span class="status-badge status-{{ order.status }}">
+            {% if order.status == 'delivered' %}✅ Entregado
+            {% else %}✖ Cancelado{% endif %}
+          </span></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <p style="color:#999;font-size:0.9rem;">No hay pedidos completados recientes.</p>
+  {% endif %}
+
+</div><!-- /dashboard-wrap -->
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const CSRF = '{{ csrf_token }}';
+const UPDATE_URL = '{% url "update_order_status" %}';
+
+let secondsAgo = 0;
+
+// Tick the "updated X sec ago" counter
+setInterval(() => {
+  secondsAgo++;
+  document.getElementById('seconds-ago').textContent = secondsAgo;
+}, 1000);
+
+// Reload page every 30 seconds
+setInterval(() => { location.reload(); }, 30000);
+
+function updateStatus(orderId, newStatus) {
+  fetch(UPDATE_URL, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+      'X-CSRFToken': CSRF,
+    },
+    body: `order_id=${orderId}&status=${newStatus}`,
+  })
+  .then(r => r.json())
+  .then(data => {
+    if (data.success) location.reload();
+  });
+}
+
+function printCard(orderId) {
+  const card = document.getElementById('card-' + orderId);
+  card.classList.add('printing');
+  window.print();
+  card.classList.remove('printing');
+}
+</script>
+{% endblock %}

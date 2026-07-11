@@ -7,6 +7,7 @@ from django.views.decorators.http import require_POST
 import datetime
 import zoneinfo
 from .models import Product, Category, Cart, CartItem, Order, OrderItem
+from .whatsapp import notify_order_confirmed, notify_order_status_update
 
 def get_lang(request):
     return request.session.get('lang', 'es')
@@ -188,6 +189,7 @@ def place_order(request):
             price=item.product.price,
         )
     cart_obj.items.all().delete()
+    notify_order_confirmed(order)
     return redirect('order_receipt', order_id=order.id)
 
 @login_required
@@ -232,4 +234,5 @@ def update_order_status(request):
     order = get_object_or_404(Order, id=order_id)
     order.status = new_status
     order.save()
+    notify_order_status_update(order)
     return JsonResponse({'success': True})

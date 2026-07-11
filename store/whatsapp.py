@@ -1,10 +1,18 @@
+import logging
+
 from twilio.rest import Client
 from django.conf import settings
 
+logger = logging.getLogger(__name__)
+
 
 def send_whatsapp(to_number, message):
-    """Send a WhatsApp message via Twilio. Silently fails if credentials missing."""
+    """Send a WhatsApp message via Twilio. Logs and returns without raising if it can't be sent."""
     if not settings.TWILIO_ACCOUNT_SID or not settings.TWILIO_AUTH_TOKEN:
+        logger.error("WhatsApp send skipped: TWILIO_ACCOUNT_SID/TWILIO_AUTH_TOKEN not configured")
+        return
+    if not to_number:
+        logger.error("WhatsApp send skipped: no destination phone number provided")
         return
     # Normalize phone number - ensure it has country code
     phone = to_number.strip().replace(' ', '').replace('-', '').replace('(', '').replace(')', '')
@@ -12,13 +20,14 @@ def send_whatsapp(to_number, message):
         phone = '+52' + phone  # default to Mexico country code
     try:
         client = Client(settings.TWILIO_ACCOUNT_SID, settings.TWILIO_AUTH_TOKEN)
-        client.messages.create(
+        result = client.messages.create(
             from_=settings.TWILIO_WHATSAPP_FROM,
             to=f'whatsapp:{phone}',
             body=message
         )
-    except Exception as e:
-        print(f"WhatsApp send error: {e}")
+        logger.info("WhatsApp message queued: sid=%s to=%s status=%s", result.sid, phone, result.status)
+    except Exception:
+        logger.error("WhatsApp send error: to=%s from=%s", phone, settings.TWILIO_WHATSAPP_FROM, exc_info=True)
 
 
 def notify_order_confirmed(order):
